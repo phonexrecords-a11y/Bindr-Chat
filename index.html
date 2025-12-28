@@ -6,6 +6,7 @@
     <title>BINDR - Онлайн чат</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Стили остаются без изменений */
         :root {
             --bg-primary: #ffffff;
             --bg-secondary: #f5f5f5;
@@ -60,7 +61,6 @@
             margin: 0 auto;
         }
 
-        /* Левый сайдбар - комнаты и пользователи */
         .sidebar {
             width: 300px;
             background-color: var(--bg-secondary);
@@ -70,7 +70,6 @@
             overflow: hidden;
         }
 
-        /* Главный чат */
         .main-chat {
             flex: 1;
             display: flex;
@@ -78,7 +77,6 @@
             overflow: hidden;
         }
 
-        /* Адаптивность для мобильных */
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -94,17 +92,8 @@
             .main-chat {
                 height: 60vh;
             }
-            
-            .header {
-                padding: 10px 15px;
-            }
-            
-            .message-input input {
-                font-size: 14px;
-            }
         }
 
-        /* Шапка */
         .header {
             padding: 20px;
             background-color: var(--bg-tertiary);
@@ -112,7 +101,6 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 10px var(--shadow);
-            z-index: 10;
         }
 
         .logo {
@@ -122,10 +110,6 @@
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-
-        .logo i {
-            color: var(--accent);
         }
 
         .theme-toggle, .logout-btn {
@@ -143,7 +127,6 @@
             background-color: var(--bg-tertiary);
         }
 
-        /* Экран входа */
         .login-screen {
             display: flex;
             flex-direction: column;
@@ -202,13 +185,8 @@
             background-color: var(--accent-hover);
         }
 
-        .moderator-note {
-            margin-top: 20px;
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
+        /* УДАЛЕНО: .moderator-note */
 
-        /* Список комнат */
         .rooms-section, .users-section {
             padding: 20px;
             border-bottom: 1px solid var(--border);
@@ -221,7 +199,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: var(--text-primary);
         }
 
         .room-list, .user-list {
@@ -261,7 +238,6 @@
 
         .room-stats {
             font-size: 12px;
-            color: inherit;
             opacity: 0.8;
         }
 
@@ -291,7 +267,6 @@
             background-color: var(--moderator);
         }
 
-        /* Контейнер сообщений */
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -354,7 +329,6 @@
             font-size: 14px;
         }
 
-        /* Ввод сообщения */
         .message-input {
             padding: 20px;
             background-color: var(--bg-secondary);
@@ -373,11 +347,6 @@
             color: var(--text-primary);
         }
 
-        .message-input input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
         .send-btn {
             padding: 0 25px;
             background-color: var(--accent);
@@ -393,7 +362,6 @@
             background-color: var(--accent-hover);
         }
 
-        /* Модераторские кнопки */
         .moderator-controls {
             display: flex;
             gap: 10px;
@@ -417,7 +385,6 @@
             background-color: var(--warning);
         }
 
-        /* Уведомления */
         .notification {
             position: fixed;
             top: 20px;
@@ -440,7 +407,6 @@
             to { opacity: 0; }
         }
 
-        /* Скроллбар */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -454,7 +420,6 @@
             border-radius: 4px;
         }
 
-        /* Скрытые элементы */
         .hidden {
             display: none !important;
         }
@@ -473,15 +438,16 @@
             <h1><i class="fas fa-comments"></i> BINDR</h1>
             <p>Текстовый чат с автоматическими комнатами</p>
             
-            <input type="text" id="usernameInput" class="username-input" placeholder="Введите имя пользователя" maxlength="50" autocomplete="off">
+            <input type="text" id="usernameInput" class="username-input" 
+                   placeholder="Введите имя пользователя" 
+                   maxlength="50" 
+                   autocomplete="off">
             
             <button id="loginButton" class="login-btn">
                 <i class="fas fa-sign-in-alt"></i> Войти в чат
             </button>
             
-            <div class="moderator-note">
-                Для входа как модератор используйте имя: <strong>iammoderator</strong>
-            </div>
+            <!-- УДАЛЕНО: блок с упоминанием имени модератора -->
         </div>
     </div>
 
@@ -552,7 +518,10 @@
             
             <!-- Ввод сообщения -->
             <div class="message-input">
-                <input type="text" id="messageInput" placeholder="Напишите сообщение..." maxlength="500" autocomplete="off">
+                <input type="text" id="messageInput" 
+                       placeholder="Напишите сообщение..." 
+                       maxlength="500" 
+                       autocomplete="off">
                 <button id="sendButton" class="send-btn">
                     <i class="fas fa-paper-plane"></i> Отправить
                 </button>
@@ -574,11 +543,10 @@
     
     <!-- Основной скрипт -->
     <script>
-        // Конфигурация Supabase - используем ваши реквизиты
+        // Конфигурация Supabase
         const SUPABASE_URL = 'https://aubqtfklrusrwrpkymvr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1YnF0ZmtscnVzcndycGt5bXZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5MTg3MTksImV4cCI6MjA4MjQ5NDcxOX0.eOXabojRBvHZMYCu1dGnjStnm0eX8_dv-o1DwojEQs8';
         
-        // Инициализация Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         // Глобальные переменные
@@ -610,7 +578,6 @@
         
         // Инициализация приложения
         document.addEventListener('DOMContentLoaded', () => {
-            // Проверяем сохраненную тему
             const savedTheme = localStorage.getItem('bindr-theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
             updateThemeIcon(savedTheme);
@@ -635,8 +602,8 @@
             document.addEventListener('keypress', resetActivityTimer);
             
             // Запускаем периодическую очистку
-            setInterval(cleanupInactiveUsers, 60000); // Каждую минуту
-            setInterval(cleanupOldRooms, 300000); // Каждые 5 минут
+            setInterval(cleanupInactiveUsers, 60000);
+            setInterval(cleanupOldRooms, 300000);
         });
         
         // Обработчик входа
@@ -662,6 +629,7 @@
             }
             
             // Проверяем, является ли пользователь модератором
+            // Только здесь проверяется специальное имя модератора
             isModerator = username.toLowerCase() === 'iammoderator';
             
             // Находим или создаем комнату
@@ -734,7 +702,10 @@
             resetActivityTimer();
             
             // Показываем уведомление
-            showNotification(`Добро пожаловать, ${username}!`, 'success');
+            const welcomeMsg = isModerator 
+                ? `Добро пожаловать, модератор!` 
+                : `Добро пожаловать, ${username}!`;
+            showNotification(welcomeMsg, 'success');
             
             // Проигрываем звук входа
             playSound('join');
@@ -754,7 +725,6 @@
                     { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${currentRoom.id}` },
                     (payload) => {
                         const newMessage = payload.new;
-                        // Не показываем свои же сообщения дважды
                         if (newMessage.user_id !== currentUser.id) {
                             displayMessage(newMessage);
                             playSound('message');
@@ -771,10 +741,13 @@
                     (payload) => {
                         loadUsers();
                         
-                        // Проигрываем звук при входе нового пользователя
                         if (payload.eventType === 'INSERT' && payload.new.id !== currentUser.id) {
                             playSound('join');
-                            showNotification(`${payload.new.username} присоединился к чату`, 'info');
+                            // Не показываем имя модератора в уведомлениях
+                            const username = payload.new.username === 'iammoderator' 
+                                ? 'Модератор' 
+                                : payload.new.username;
+                            showNotification(`${username} присоединился к чату`, 'info');
                         }
                     }
                 )
@@ -788,7 +761,6 @@
                     (payload) => {
                         loadRooms();
                         
-                        // Если текущую комнату удалили
                         if (payload.eventType === 'DELETE' && payload.old.id === currentRoom.id) {
                             showNotification('Комната была удалена', 'warning');
                             setTimeout(() => {
@@ -806,10 +778,8 @@
             
             if (!content) return;
             
-            // Проверяем активность пользователя
             await updateUserActivity();
             
-            // Отправляем сообщение
             const { error } = await supabase
                 .from('messages')
                 .insert([
@@ -827,10 +797,8 @@
                 return;
             }
             
-            // Очищаем поле ввода
             messageInput.value = '';
             
-            // Прокручиваем к новому сообщению
             setTimeout(() => {
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }, 100);
@@ -849,21 +817,17 @@
                 return;
             }
             
-            // Очищаем контейнер
             messagesContainer.innerHTML = '';
             
-            // Добавляем системное сообщение
             const systemMsg = document.createElement('div');
             systemMsg.className = 'system-message';
             systemMsg.textContent = `Вы вошли в комнату "${currentRoom.name}"`;
             messagesContainer.appendChild(systemMsg);
             
-            // Отображаем сообщения
             messages.forEach(message => {
                 displayMessage(message);
             });
             
-            // Прокручиваем вниз
             setTimeout(() => {
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }, 100);
@@ -879,17 +843,20 @@
                 minute: '2-digit' 
             });
             
+            // Маскируем имя модератора в чате
+            const displayUsername = message.username === 'iammoderator' 
+                ? 'Модератор' 
+                : message.username;
+            
             messageElement.innerHTML = `
                 <div class="message-header">
-                    <span class="message-username">${message.username}</span>
+                    <span class="message-username">${displayUsername}</span>
                     <span class="message-time">${time}</span>
                 </div>
                 <div class="message-content">${escapeHtml(message.content)}</div>
             `;
             
             messagesContainer.appendChild(messageElement);
-            
-            // Прокручиваем к новому сообщению
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
         
@@ -907,20 +874,16 @@
                 return;
             }
             
-            // Обновляем счетчик комнат
             const activeRooms = rooms.filter(room => room.current_users < room.max_users);
             roomCount.textContent = `${activeRooms.length}/34`;
             
-            // Очищаем список
             roomList.innerHTML = '';
             
-            // Отображаем комнаты
             activeRooms.forEach(room => {
                 const roomElement = document.createElement('div');
                 roomElement.className = `room-item ${room.id === currentRoom.id ? 'active' : ''}`;
                 roomElement.dataset.roomId = room.id;
                 
-                // Рассчитываем оставшееся время
                 const expiryTime = new Date(room.expires_at);
                 const timeLeft = Math.max(0, Math.floor((expiryTime - new Date()) / 60000));
                 
@@ -931,7 +894,6 @@
                     </div>
                 `;
                 
-                // Добавляем обработчик смены комнаты
                 if (room.id !== currentRoom.id) {
                     roomElement.addEventListener('click', () => switchRoom(room.id));
                 }
@@ -959,29 +921,29 @@
                 return;
             }
             
-            // Обновляем счетчик
             userCount.textContent = users.length;
-            
-            // Очищаем список
             userList.innerHTML = '';
             
-            // Отображаем пользователей
             users.forEach(user => {
                 const userElement = document.createElement('div');
                 userElement.className = 'user-item';
                 userElement.dataset.userId = user.id;
                 
-                const firstLetter = user.username.charAt(0).toUpperCase();
-                const isUserModerator = user.username.toLowerCase() === 'iammoderator';
+                // Маскируем имя модератора в списке пользователей
+                const displayName = user.username === 'iammoderator' 
+                    ? 'Модератор' 
+                    : user.username;
+                
+                const firstLetter = displayName.charAt(0).toUpperCase();
+                const isUserModerator = user.username === 'iammoderator';
                 
                 userElement.innerHTML = `
                     <div class="user-info">
                         <div class="user-avatar ${isUserModerator ? 'user-moderator' : ''}">${firstLetter}</div>
-                        <div class="user-name">${user.username} ${isUserModerator ? '<i class="fas fa-shield-alt" style="color: var(--moderator); margin-left: 5px;"></i>' : ''}</div>
+                        <div class="user-name">${displayName} ${isUserModerator ? '<i class="fas fa-shield-alt" style="color: var(--moderator); margin-left: 5px;"></i>' : ''}</div>
                     </div>
                 `;
                 
-                // Добавляем кнопки модератора
                 if (isModerator && user.id !== currentUser.id) {
                     const modBtn = document.createElement('button');
                     modBtn.className = 'mod-btn delete-user-btn';
@@ -1011,13 +973,11 @@
                 return;
             }
             
-            // Проверяем, есть ли место
             if (room.current_users >= room.max_users) {
                 showNotification('В комнате нет свободных мест', 'error');
                 return;
             }
             
-            // Обновляем пользователя
             const { error: updateError } = await supabase
                 .from('users')
                 .update({ room_id: roomId })
@@ -1029,10 +989,7 @@
                 return;
             }
             
-            // Обновляем текущую комнату
             currentRoom = room;
-            
-            // Обновляем интерфейс
             updateCurrentRoomInfo();
             loadMessages();
             loadUsers();
@@ -1040,7 +997,7 @@
             showNotification(`Вы перешли в комнату "${room.name}"`, 'success');
         }
         
-        // Удаление пользователя (для модераторов)
+        // Удаление пользователя
         async function deleteUser(userId) {
             if (!isModerator) return;
             
@@ -1062,7 +1019,7 @@
             showNotification('Пользователь удален', 'success');
         }
         
-        // Удаление комнаты (для модераторов)
+        // Удаление комнаты
         async function deleteCurrentRoom() {
             if (!isModerator) return;
             
@@ -1109,10 +1066,8 @@
                 clearTimeout(activityTimer);
             }
             
-            // Устанавливаем таймер на 10 минут
             activityTimer = setTimeout(async () => {
                 if (currentUser) {
-                    // Помечаем пользователя как неактивного
                     const { error } = await supabase
                         .from('users')
                         .update({ is_online: false })
@@ -1125,7 +1080,7 @@
                         }, 3000);
                     }
                 }
-            }, 10 * 60 * 1000); // 10 минут
+            }, 10 * 60 * 1000);
         }
         
         // Очистка неактивных пользователей
@@ -1142,7 +1097,6 @@
             
             if (error || !inactiveUsers || inactiveUsers.length === 0) return;
             
-            // Помечаем пользователей как оффлайн
             await supabase
                 .from('users')
                 .update({ is_online: false })
@@ -1151,7 +1105,6 @@
         
         // Очистка старых комнат
         async function cleanupOldRooms() {
-            // Удаляем комнаты, которым больше часа
             const { error } = await supabase
                 .rpc('cleanup_old_rooms');
             
@@ -1166,7 +1119,6 @@
             
             currentRoomName.textContent = currentRoom.name;
             
-            // Рассчитываем оставшееся время
             const expiryTime = new Date(currentRoom.expires_at);
             const now = new Date();
             const timeLeft = Math.max(0, Math.floor((expiryTime - now) / 60000));
@@ -1174,7 +1126,6 @@
             const roomExpiry = document.getElementById('roomExpiry');
             roomExpiry.textContent = `Комната обновится через ${timeLeft} минут`;
             
-            // Обновляем таймер
             if (roomExpiryTimer) {
                 clearInterval(roomExpiryTimer);
             }
@@ -1188,7 +1139,7 @@
                     clearInterval(roomExpiryTimer);
                     showNotification('Комната скоро будет обновлена', 'info');
                 }
-            }, 60000); // Каждую минуту
+            }, 60000);
         }
         
         // Смена темы
@@ -1245,7 +1196,6 @@
             
             document.body.appendChild(notification);
             
-            // Удаляем уведомление через 3 секунды
             setTimeout(() => {
                 if (notification.parentNode) {
                     notification.parentNode.removeChild(notification);
