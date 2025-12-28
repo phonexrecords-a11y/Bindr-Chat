@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BINDR - Защищенный онлайн чат</title>
+    <title>BINDR - Онлайн чат</title>
     <style>
         * {
             margin: 0;
@@ -69,25 +69,6 @@
             box-shadow: 0 0 0 3px rgba(76, 201, 240, 0.1);
         }
         
-        .password-input {
-            width: 100%;
-            padding: 15px 20px;
-            margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-            transition: all 0.3s;
-            display: none;
-        }
-        
-        .password-input:focus {
-            outline: none;
-            border-color: #f72585;
-            box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.1);
-        }
-        
         .login-btn {
             width: 100%;
             padding: 16px;
@@ -106,8 +87,8 @@
             box-shadow: 0 10px 30px rgba(76, 201, 240, 0.3);
         }
         
-        .login-btn.moderator {
-            background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+        .login-btn:active {
+            transform: translateY(0);
         }
         
         .error-message {
@@ -180,6 +161,12 @@
         }
         
         /* Комнаты */
+        .room-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 30px;
+        }
+        
         .room-item {
             padding: 12px 15px;
             margin-bottom: 8px;
@@ -216,6 +203,11 @@
         }
         
         /* Пользователи */
+        .user-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
         .user-item {
             padding: 10px 12px;
             margin-bottom: 6px;
@@ -279,6 +271,8 @@
             overflow-y: auto;
             padding: 25px;
             background: rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
         }
         
         .message {
@@ -306,7 +300,11 @@
         .message.own {
             background: rgba(76, 201, 240, 0.15);
             border-color: rgba(76, 201, 240, 0.3);
-            margin-left: auto;
+            align-self: flex-end;
+        }
+        
+        .message.other {
+            align-self: flex-start;
         }
         
         .message-header {
@@ -332,6 +330,15 @@
         
         .message-content {
             line-height: 1.5;
+        }
+        
+        .system-message {
+            text-align: center;
+            color: #b0b0b0;
+            font-style: italic;
+            margin: 10px 0;
+            padding: 10px;
+            align-self: center;
         }
         
         /* Ввод сообщения */
@@ -468,58 +475,23 @@
             100% { opacity: 1; }
         }
         
-        /* Модальное окно пароля */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
+        /* Скроллбар */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
         
-        .modal {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 40px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
         }
         
-        .modal h3 {
-            color: white;
-            margin-bottom: 20px;
+        ::-webkit-scrollbar-thumb {
+            background: rgba(76, 201, 240, 0.5);
+            border-radius: 4px;
         }
         
-        .modal-input {
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            color: white;
-            font-size: 1rem;
-        }
-        
-        .modal-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(76, 201, 240, 0.7);
         }
     </style>
 </head>
@@ -528,21 +500,12 @@
     <div id="loginScreen" class="login-screen">
         <div class="login-card">
             <h1>BINDR</h1>
-            <p>Защищенный анонимный чат</p>
+            <p>Онлайн чат в реальном времени</p>
             
             <input type="text" id="usernameInput" class="username-input" 
                    placeholder="Введите имя пользователя" 
                    autocomplete="off"
                    autofocus>
-            
-            <div id="moderatorPrompt" style="display: none;">
-                <p style="color: #f72585; margin-bottom: 15px; font-size: 0.9rem;">
-                    <i class="fas fa-shield-alt"></i> Обнаружен доступ модератора
-                </p>
-                <input type="password" id="passwordInput" class="password-input" 
-                       placeholder="Введите секретный код доступа"
-                       autocomplete="off">
-            </div>
             
             <button id="loginButton" class="login-btn">
                 Войти в чат
@@ -552,31 +515,14 @@
             
             <div style="margin-top: 30px; font-size: 0.9rem; color: #b0b0b0; line-height: 1.5;">
                 <p><strong>Как работает:</strong></p>
-                <p>• Анонимные имена</p>
                 <p>• Автоматические комнаты</p>
+                <p>• До 34 человек в комнате</p>
+                <p>• Сообщения сохраняются</p>
                 <p>• Работает на всех устройствах</p>
-                <p>• Защищенный доступ</p>
+                <p style="margin-top: 10px; font-size: 0.8rem; color: #4cc9f0;">
+                    Для модератора используйте: <strong>iammoderator</strong>
+                </p>
             </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно пароля -->
-    <div id="passwordModal" class="modal-overlay">
-        <div class="modal">
-            <h3><i class="fas fa-shield-alt"></i> Проверка доступа</h3>
-            <p style="color: #b0b0b0; margin-bottom: 20px;">
-                Для входа как модератор требуется подтверждение
-            </p>
-            <input type="password" id="modalPassword" class="modal-input" 
-                   placeholder="Секретный код доступа"
-                   autocomplete="off"
-                   autofocus>
-            <button id="confirmModeratorBtn" class="modal-btn">
-                Подтвердить
-            </button>
-            <button id="cancelModeratorBtn" style="width: 100%; padding: 15px; margin-top: 10px; background: none; border: 1px solid rgba(255, 255, 255, 0.2); color: white; border-radius: 10px; cursor: pointer;">
-                Отмена
-            </button>
         </div>
     </div>
 
@@ -618,14 +564,14 @@
             <div class="sidebar">
                 <div style="margin-bottom: 25px;">
                     <div class="section-title">Активные комнаты</div>
-                    <div id="roomList">
+                    <div id="roomList" class="room-list">
                         <!-- Комнаты будут здесь -->
                     </div>
                 </div>
                 
                 <div>
                     <div class="section-title">Пользователи онлайн</div>
-                    <div id="userList">
+                    <div id="userList" class="user-list">
                         <!-- Пользователи будут здесь -->
                     </div>
                 </div>
@@ -634,10 +580,8 @@
             <!-- Основной чат -->
             <div class="main-chat">
                 <div id="messagesContainer" class="messages-container">
-                    <div style="text-align: center; color: #b0b0b0; padding: 40px;">
-                        <p style="font-size: 24px; margin-bottom: 10px;">💬</p>
-                        <p style="font-size: 1.2rem; margin-bottom: 5px;">Добро пожаловать в BINDR</p>
-                        <p>Загрузка сообщений...</p>
+                    <div class="system-message">
+                        Добро пожаловать в BINDR! Начните общение.
                     </div>
                 </div>
                 
@@ -660,17 +604,16 @@
 
     <script>
         // ========== КОНФИГУРАЦИЯ ==========
-        // 🔒 СЕКРЕТНЫЙ КОД МОДЕРАТОРА (измените этот код!)
-        const MODERATOR_SECRET_CODE = "admin123"; // Измените этот код!
+        const SERVER_KEY = 'bindr-chat-server-v2';
+        const USER_KEY = 'bindr-current-user';
         
         // ========== ДАННЫЕ ЧАТА ==========
         let currentUser = null;
-        let users = []; // Все пользователи
-        let rooms = []; // Все комнаты
-        let messages = []; // Все сообщения
+        let users = [];
+        let rooms = [];
         let currentRoom = null;
         let isModerator = false;
-        let socket = null; // Для WebSocket соединения
+        let messageQueue = [];
         
         // ========== DOM ЭЛЕМЕНТЫ ==========
         const loginScreen = document.getElementById('loginScreen');
@@ -690,169 +633,56 @@
         const createRoomBtn = document.getElementById('createRoomBtn');
         const userList = document.getElementById('userList');
         const roomList = document.getElementById('roomList');
-        const moderatorPrompt = document.getElementById('moderatorPrompt');
-        const passwordInput = document.getElementById('passwordInput');
-        const passwordModal = document.getElementById('passwordModal');
-        const modalPassword = document.getElementById('modalPassword');
-        const confirmModeratorBtn = document.getElementById('confirmModeratorBtn');
-        const cancelModeratorBtn = document.getElementById('cancelModeratorBtn');
         const connectionText = document.getElementById('connectionText');
         
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 BINDR Chat инициализирован');
             
-            // Настройка обработчиков событий
-            setupEventListeners();
-            
-            // Загрузка данных из localStorage
+            // Загружаем данные
             loadData();
             
-            // Подключение к онлайн-чату
-            connectToChat();
+            // Настраиваем обработчики
+            setupEventListeners();
+            
+            // Проверяем сохраненного пользователя
+            checkSavedUser();
+            
+            // Запускаем синхронизацию
+            startSync();
         });
         
         function setupEventListeners() {
-            // Вход
             loginButton.addEventListener('click', handleLogin);
             usernameInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') handleLogin();
             });
             
-            // Проверка имени на модератора
-            usernameInput.addEventListener('input', checkForModerator);
-            
-            // Сообщения
             sendButton.addEventListener('click', sendMessage);
             messageInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') sendMessage();
             });
             
-            // Модераторские функции
+            logoutButton.addEventListener('click', handleLogout);
             clearChatBtn.addEventListener('click', clearChat);
             deleteRoomBtn.addEventListener('click', deleteCurrentRoom);
             createRoomBtn.addEventListener('click', createNewRoom);
-            logoutButton.addEventListener('click', handleLogout);
-            
-            // Модальное окно пароля
-            confirmModeratorBtn.addEventListener('click', verifyModeratorPassword);
-            cancelModeratorBtn.addEventListener('click', cancelModeratorLogin);
-            modalPassword.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') verifyModeratorPassword();
-            });
         }
         
-        function checkForModerator() {
-            const username = usernameInput.value.toLowerCase();
-            if (username === 'iammoderator') {
-                moderatorPrompt.style.display = 'block';
-                passwordInput.style.display = 'block';
-                loginButton.textContent = '🔐 Войти как модератор';
-                loginButton.classList.add('moderator');
-                passwordInput.focus();
-            } else {
-                moderatorPrompt.style.display = 'none';
-                passwordInput.style.display = 'none';
-                loginButton.textContent = 'Войти в чат';
-                loginButton.classList.remove('moderator');
-            }
-        }
-        
-        // ========== ОНЛАЙН ПОДКЛЮЧЕНИЕ ==========
-        function connectToChat() {
-            // Симуляция WebSocket соединения
-            connectionText.textContent = 'Подключение...';
-            
-            setTimeout(() => {
-                connectionText.textContent = 'Онлайн';
-                showNotification('Подключено к онлайн чату', 'success');
-                
-                // Синхронизируем данные с другими устройствами
-                syncDataWithServer();
-                
-                // Запускаем периодическую синхронизацию
-                setInterval(syncDataWithServer, 5000); // Каждые 5 секунд
-                
-            }, 1000);
-        }
-        
-        function syncDataWithServer() {
-            // Здесь будет реальная синхронизация с сервером
-            // Пока используем localStorage как общее хранилище
-            
-            // Обновляем данные из "сервера" (localStorage)
-            updateFromServer();
-            
-            // Отправляем наши данные на "сервер"
-            sendToServer();
-        }
-        
-        function updateFromServer() {
-            // Получаем обновленные данные
-            const serverData = localStorage.getItem('bindr-server-data');
-            if (serverData) {
-                const data = JSON.parse(serverData);
-                
-                // Обновляем комнаты
-                if (data.rooms) {
-                    rooms = data.rooms;
-                    updateRoomList();
-                }
-                
-                // Обновляем пользователей
-                if (data.users) {
-                    users = data.users;
-                    updateUserList();
-                }
-                
-                // Обновляем сообщения
-                if (data.messages && currentRoom) {
-                    const roomMessages = data.messages.filter(m => m.roomId === currentRoom.id);
-                    if (JSON.stringify(roomMessages) !== JSON.stringify(messages)) {
-                        messages = roomMessages;
-                        loadMessages();
+        function checkSavedUser() {
+            const saved = localStorage.getItem(USER_KEY);
+            if (saved) {
+                try {
+                    currentUser = JSON.parse(saved);
+                    if (currentUser && currentUser.username) {
+                        isModerator = currentUser.username.toLowerCase() === 'iammoderator';
+                        showChatInterface();
+                        showNotification(`С возвращением, ${currentUser.username}!`, 'success');
                     }
+                } catch (e) {
+                    console.error('Ошибка загрузки пользователя:', e);
                 }
             }
-        }
-        
-        function sendToServer() {
-            if (!currentUser) return;
-            
-            // Обновляем текущего пользователя
-            const userIndex = users.findIndex(u => u.id === currentUser.id);
-            if (userIndex > -1) {
-                users[userIndex] = currentUser;
-            } else {
-                users.push(currentUser);
-            }
-            
-            // Сохраняем на "сервер"
-            const serverData = {
-                rooms: rooms,
-                users: users.filter(u => u.isOnline),
-                messages: getAllMessages(),
-                lastUpdate: new Date().toISOString()
-            };
-            
-            localStorage.setItem('bindr-server-data', JSON.stringify(serverData));
-            
-            // Также сохраняем локально
-            saveData();
-        }
-        
-        function getAllMessages() {
-            // Собираем все сообщения из всех комнат
-            const allMessages = [];
-            rooms.forEach(room => {
-                if (room.messages) {
-                    allMessages.push(...room.messages.map(m => ({
-                        ...m,
-                        roomId: room.id
-                    })));
-                }
-            });
-            return allMessages;
         }
         
         // ========== ВХОД В СИСТЕМУ ==========
@@ -870,98 +700,41 @@
                 return;
             }
             
-            // Проверяем, является ли попыткой входа модератора
-            if (username.toLowerCase() === 'iammoderator') {
-                const password = passwordInput.value;
-                if (!password) {
-                    showError('Введите секретный код доступа');
-                    passwordInput.focus();
-                    return;
-                }
-                
-                // Показываем модальное окно для ввода пароля
-                showPasswordModal();
-                return;
-            }
-            
-            // Обычный пользователь
-            await loginAsUser(username);
-        }
-        
-        function showPasswordModal() {
-            passwordModal.style.display = 'flex';
-            modalPassword.value = '';
-            modalPassword.focus();
-        }
-        
-        function hidePasswordModal() {
-            passwordModal.style.display = 'none';
-            modalPassword.value = '';
-        }
-        
-        function verifyModeratorPassword() {
-            const password = modalPassword.value.trim();
-            
-            if (password === MODERATOR_SECRET_CODE) {
-                // Пароль верный
-                hidePasswordModal();
-                loginAsUser('iammoderator', true);
-            } else {
-                showError('Неверный код доступа');
-                modalPassword.focus();
-            }
-        }
-        
-        function cancelModeratorLogin() {
-            hidePasswordModal();
-            usernameInput.value = '';
-            passwordInput.value = '';
-            moderatorPrompt.style.display = 'none';
-            passwordInput.style.display = 'none';
-            loginButton.textContent = 'Войти в чат';
-            loginButton.classList.remove('moderator');
-            usernameInput.focus();
-        }
-        
-        async function loginAsUser(username, moderator = false) {
             // Проверяем, занято ли имя
             if (isUsernameTaken(username)) {
                 showError('Это имя уже занято. Выберите другое.');
                 return;
             }
             
-            // Устанавливаем флаг модератора
-            isModerator = moderator;
+            // Проверяем, модератор ли это
+            isModerator = username.toLowerCase() === 'iammoderator';
             
             // Создаем пользователя
             currentUser = {
                 id: generateId(),
                 username: username,
-                isModerator: moderator,
+                isModerator: isModerator,
                 isOnline: true,
+                roomId: null,
                 joinedAt: new Date().toISOString(),
                 lastActive: new Date().toISOString()
             };
             
             // Находим или создаем комнату
             currentRoom = await findOrCreateRoom();
+            currentUser.roomId = currentRoom.id;
             
-            // Добавляем пользователя в комнату
-            if (currentRoom.users) {
-                currentRoom.users.push(currentUser.id);
-            } else {
-                currentRoom.users = [currentUser.id];
-            }
+            // Добавляем пользователя в систему
+            users.push(currentUser);
             
-            // Сохраняем данные
+            // Сохраняем
             saveData();
-            sendToServer();
             
-            // Показываем интерфейс чата
+            // Показываем чат
             showChatInterface();
             
             // Показываем уведомление
-            if (moderator) {
+            if (isModerator) {
                 showNotification('👑 Модератор вошел в чат', 'warning');
             } else {
                 showNotification(`👋 ${username} присоединился`, 'success');
@@ -976,61 +749,57 @@
         }
         
         async function findOrCreateRoom() {
-            // Ищем комнату с местом (макс 34 человека)
+            // Сначала пытаемся найти активную комнату с местом
             let availableRoom = rooms.find(room => 
                 room.isActive && 
-                (!room.users || room.users.length < 34)
+                getRoomUserCount(room.id) < 34
             );
             
-            // Если нет доступной комнаты, создаем новую
-            if (!availableRoom) {
-                availableRoom = createNewRoomObject();
-                rooms.push(availableRoom);
+            if (availableRoom) {
+                return availableRoom;
             }
             
-            return availableRoom;
-        }
-        
-        function createNewRoomObject() {
+            // Создаем новую комнату
             const roomNumber = rooms.filter(r => r.isActive).length + 1;
-            return {
+            const newRoom = {
                 id: generateId(),
                 name: `Комната ${roomNumber}`,
-                users: [],
-                messages: [],
-                maxUsers: 34,
-                isActive: true,
                 createdAt: new Date().toISOString(),
-                expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString() // 1 час
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+                maxUsers: 34,
+                isActive: true
             };
+            
+            rooms.push(newRoom);
+            return newRoom;
         }
         
-        // ========== ИНТЕРФЕЙС ЧАТА ==========
+        function getRoomUserCount(roomId) {
+            return users.filter(user => 
+                user.roomId === roomId && 
+                user.isOnline === true
+            ).length;
+        }
+        
+        // ========== ОТОБРАЖЕНИЕ ЧАТА ==========
         function showChatInterface() {
-            // Переключаем экраны
             loginScreen.style.display = 'none';
             chatInterface.style.display = 'block';
             
-            // Показываем контролы модератора
             if (isModerator) {
                 moderatorControls.style.display = 'flex';
                 moderatorBadge.style.display = 'block';
             }
             
-            // Обновляем данные
             updateRoomList();
             updateUserList();
             loadMessages();
             
-            // Фокусируемся на поле ввода
             setTimeout(() => {
                 messageInput.focus();
             }, 100);
             
-            // Запускаем таймер активности
             startActivityTimer();
-            
-            // Запускаем очистку старых данных
             startCleanupTimers();
         }
         
@@ -1038,13 +807,7 @@
         function sendMessage() {
             const content = messageInput.value.trim();
             
-            if (!content) {
-                messageInput.focus();
-                return;
-            }
-            
-            if (!currentUser || !currentRoom) {
-                showError('Вы не вошли в чат');
+            if (!content || !currentUser || !currentRoom) {
                 return;
             }
             
@@ -1054,25 +817,16 @@
                 userId: currentUser.id,
                 username: currentUser.username,
                 content: content,
+                roomId: currentRoom.id,
                 timestamp: new Date().toISOString(),
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
             
-            // Добавляем в комнату
-            if (!currentRoom.messages) {
-                currentRoom.messages = [];
-            }
-            currentRoom.messages.push(message);
+            // Добавляем в очередь
+            messageQueue.push(message);
             
-            // Также добавляем в общий массив
-            messages.push(message);
-            
-            // Сохраняем
-            saveData();
-            sendToServer();
-            
-            // Отображаем
-            displayMessage(message);
+            // Отображаем сразу
+            displayMessage(message, true);
             
             // Очищаем поле ввода
             messageInput.value = '';
@@ -1080,17 +834,17 @@
             // Обновляем активность
             updateUserActivity();
             
+            // Сохраняем данные
+            saveData();
+            
             // Фокусируемся обратно
             messageInput.focus();
         }
         
-        function displayMessage(message) {
+        function displayMessage(message, isOwn = false) {
             const messageElement = document.createElement('div');
-            const isOwnMessage = message.userId === currentUser.id;
+            messageElement.className = `message ${isOwn ? 'own' : 'other'}`;
             
-            messageElement.className = `message ${isOwnMessage ? 'own' : 'other'}`;
-            
-            // Маскируем имя модератора
             const displayName = message.username === 'iammoderator' 
                 ? '👑 Модератор' 
                 : message.username;
@@ -1108,8 +862,6 @@
             `;
             
             messagesContainer.appendChild(messageElement);
-            
-            // Прокручиваем вниз
             scrollToBottom();
         }
         
@@ -1118,25 +870,32 @@
             messagesContainer.innerHTML = '';
             
             // Загружаем сообщения текущей комнаты
-            if (currentRoom && currentRoom.messages) {
-                messages = currentRoom.messages;
-            }
+            const roomMessages = getAllMessages().filter(msg => msg.roomId === currentRoom.id);
             
-            // Отображаем сообщения
-            if (!messages || messages.length === 0) {
+            if (roomMessages.length === 0) {
                 messagesContainer.innerHTML = `
-                    <div style="text-align: center; color: #b0b0b0; padding: 40px;">
-                        <p style="font-size: 24px; margin-bottom: 10px;">💬</p>
-                        <p style="font-size: 1.2rem; margin-bottom: 5px;">Чат пуст</p>
-                        <p>Напишите первое сообщение!</p>
+                    <div class="system-message">
+                        💬 Начните общение! Здесь еще нет сообщений.
                     </div>
                 `;
-            } else {
-                messages.forEach(displayMessage);
+                return;
             }
             
-            // Прокручиваем вниз
-            scrollToBottom();
+            // Добавляем системное сообщение
+            const systemMsg = document.createElement('div');
+            systemMsg.className = 'system-message';
+            systemMsg.textContent = `Вы в комнате "${currentRoom.name}"`;
+            messagesContainer.appendChild(systemMsg);
+            
+            // Отображаем сообщения
+            roomMessages.forEach(msg => {
+                const isOwn = msg.userId === currentUser.id;
+                displayMessage(msg, isOwn);
+            });
+        }
+        
+        function getAllMessages() {
+            return messageQueue;
         }
         
         // ========== КОМНАТЫ ==========
@@ -1146,23 +905,19 @@
             const activeRooms = rooms.filter(room => room.isActive);
             
             if (activeRooms.length === 0) {
-                roomList.innerHTML = `
-                    <div style="color: #b0b0b0; text-align: center; padding: 20px;">
-                        Нет активных комнат
-                    </div>
-                `;
+                roomList.innerHTML = '<div style="color: #b0b0b0; text-align: center; padding: 20px;">Нет активных комнат</div>';
                 return;
             }
             
             activeRooms.forEach(room => {
-                const roomElement = document.createElement('div');
-                roomElement.className = `room-item ${room.id === currentRoom?.id ? 'active' : ''}`;
-                roomElement.dataset.roomId = room.id;
-                
-                const userCount = room.users ? room.users.length : 0;
+                const userCount = getRoomUserCount(room.id);
                 const expiryTime = new Date(room.expiresAt);
                 const now = new Date();
                 const timeLeft = Math.max(0, Math.floor((expiryTime - now) / 60000));
+                
+                const roomElement = document.createElement('div');
+                roomElement.className = `room-item ${room.id === currentRoom?.id ? 'active' : ''}`;
+                roomElement.dataset.roomId = room.id;
                 
                 roomElement.innerHTML = `
                     <div class="room-info">
@@ -1174,7 +929,6 @@
                     </div>
                 `;
                 
-                // Добавляем обработчик смены комнаты
                 if (room.id !== currentRoom?.id) {
                     roomElement.addEventListener('click', () => switchRoom(room.id));
                 }
@@ -1190,32 +944,17 @@
             if (!newRoom) return;
             
             // Проверяем, есть ли место
-            if (newRoom.users && newRoom.users.length >= 34) {
+            if (getRoomUserCount(newRoomId) >= 34) {
                 showNotification('В комнате нет свободных мест', 'error');
                 return;
             }
             
-            // Удаляем из старой комнаты
-            if (currentRoom && currentRoom.users) {
-                const userIndex = currentRoom.users.indexOf(currentUser.id);
-                if (userIndex > -1) {
-                    currentRoom.users.splice(userIndex, 1);
-                }
-            }
-            
-            // Добавляем в новую комнату
+            // Обновляем комнату пользователя
+            currentUser.roomId = newRoomId;
             currentRoom = newRoom;
-            if (!currentRoom.users) currentRoom.users = [];
-            if (!currentRoom.users.includes(currentUser.id)) {
-                currentRoom.users.push(currentUser.id);
-            }
-            
-            // Загружаем сообщения новой комнаты
-            messages = currentRoom.messages || [];
             
             // Сохраняем
             saveData();
-            sendToServer();
             
             // Обновляем интерфейс
             updateRoomList();
@@ -1228,10 +967,17 @@
         function createNewRoom() {
             if (!isModerator) return;
             
-            const newRoom = createNewRoomObject();
-            rooms.push(newRoom);
+            const roomNumber = rooms.filter(r => r.isActive).length + 1;
+            const newRoom = {
+                id: generateId(),
+                name: `Комната ${roomNumber}`,
+                createdAt: new Date().toISOString(),
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+                maxUsers: 34,
+                isActive: true
+            };
             
-            // Переходим в новую комнату
+            rooms.push(newRoom);
             switchRoom(newRoom.id);
             
             showNotification(`Создана новая комната: ${newRoom.name}`, 'success');
@@ -1241,27 +987,18 @@
         function updateUserList() {
             userList.innerHTML = '';
             
-            if (!currentRoom || !currentRoom.users) {
-                userList.innerHTML = `
-                    <div style="color: #b0b0b0; text-align: center; padding: 20px;">
-                        Нет пользователей
-                    </div>
-                `;
+            if (!currentRoom) {
+                userList.innerHTML = '<div style="color: #b0b0b0; text-align: center; padding: 20px;">Нет пользователей</div>';
                 return;
             }
             
-            // Получаем пользователей текущей комнаты
             const roomUsers = users.filter(user => 
-                currentRoom.users.includes(user.id) && 
+                user.roomId === currentRoom.id && 
                 user.isOnline === true
             );
             
             if (roomUsers.length === 0) {
-                userList.innerHTML = `
-                    <div style="color: #b0b0b0; text-align: center; padding: 20px;">
-                        Нет пользователей онлайн
-                    </div>
-                `;
+                userList.innerHTML = '<div style="color: #b0b0b0; text-align: center; padding: 20px;">Нет пользователей онлайн</div>';
                 return;
             }
             
@@ -1285,10 +1022,10 @@
                             </div>
                         </div>
                     </div>
-                    <button class="delete-user-btn" data-user-id="${user.id}" 
-                            ${!isModerator || isCurrentUser ? 'style="display: none;"' : ''}>
-                        ×
-                    </button>
+                    ${isModerator && !isCurrentUser ? 
+                        `<button class="delete-user-btn" data-user-id="${user.id}">×</button>` : 
+                        ''
+                    }
                 `;
                 
                 userList.appendChild(userElement);
@@ -1314,28 +1051,18 @@
                 return;
             }
             
-            // Помечаем как неактивного
+            // Помечаем как оффлайн
             const userIndex = users.findIndex(u => u.id === userId);
             if (userIndex > -1) {
                 users[userIndex].isOnline = false;
-            }
-            
-            // Удаляем из комнаты
-            if (currentRoom && currentRoom.users) {
-                const roomUserIndex = currentRoom.users.indexOf(userId);
-                if (roomUserIndex > -1) {
-                    currentRoom.users.splice(roomUserIndex, 1);
-                }
+                users[userIndex].roomId = null;
             }
             
             // Удаляем сообщения пользователя
-            if (currentRoom && currentRoom.messages) {
-                currentRoom.messages = currentRoom.messages.filter(m => m.userId !== userId);
-            }
+            messageQueue = messageQueue.filter(msg => msg.userId !== userId);
             
             // Сохраняем
             saveData();
-            sendToServer();
             
             // Обновляем интерфейс
             updateUserList();
@@ -1351,15 +1078,11 @@
                 return;
             }
             
-            // Очищаем сообщения в текущей комнате
-            if (currentRoom) {
-                currentRoom.messages = [];
-                messages = [];
-            }
+            // Очищаем сообщения текущей комнаты
+            messageQueue = messageQueue.filter(msg => msg.roomId !== currentRoom.id);
             
             // Сохраняем
             saveData();
-            sendToServer();
             
             // Обновляем интерфейс
             loadMessages();
@@ -1380,26 +1103,32 @@
                 rooms[roomIndex].isActive = false;
                 
                 // Перемещаем пользователей в другие комнаты
-                if (currentRoom.users && currentRoom.users.length > 0) {
-                    // Находим другую активную комнату
-                    const otherRoom = rooms.find(r => r.isActive && r.id !== currentRoom.id);
-                    if (otherRoom) {
-                        currentRoom.users.forEach(userId => {
-                            if (!otherRoom.users.includes(userId)) {
-                                otherRoom.users.push(userId);
-                            }
-                        });
-                    }
-                }
+                const roomUsers = users.filter(u => u.roomId === currentRoom.id);
+                const otherRoom = rooms.find(r => r.isActive && r.id !== currentRoom.id);
                 
-                // Переходим в другую комнату
-                const newRoom = rooms.find(r => r.isActive && r.id !== currentRoom.id);
-                if (newRoom) {
-                    switchRoom(newRoom.id);
-                } else {
+                if (otherRoom && roomUsers.length > 0) {
+                    roomUsers.forEach(user => {
+                        const userIndex = users.findIndex(u => u.id === user.id);
+                        if (userIndex > -1) {
+                            users[userIndex].roomId = otherRoom.id;
+                        }
+                    });
+                    
+                    // Переходим в другую комнату
+                    currentUser.roomId = otherRoom.id;
+                    currentRoom = otherRoom;
+                } else if (roomUsers.length > 0) {
                     // Создаем новую комнату
                     createNewRoom();
                 }
+                
+                // Сохраняем
+                saveData();
+                
+                // Обновляем интерфейс
+                updateRoomList();
+                updateUserList();
+                loadMessages();
                 
                 showNotification('Комната удалена', 'warning');
             }
@@ -1407,8 +1136,7 @@
         
         // ========== ТАЙМЕРЫ И ОЧИСТКА ==========
         function startActivityTimer() {
-            // Обновляем активность каждую минуту
-            setInterval(updateUserActivity, 60000);
+            setInterval(updateUserActivity, 30000); // Каждые 30 секунд
         }
         
         function updateUserActivity() {
@@ -1418,84 +1146,222 @@
             
             // Помечаем неактивных пользователей (10 минут)
             const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+            let changed = false;
+            
             users.forEach(user => {
                 if (user.isOnline && new Date(user.lastActive) < tenMinutesAgo) {
                     user.isOnline = false;
-                    
-                    // Удаляем из комнаты
-                    rooms.forEach(room => {
-                        if (room.users) {
-                            const index = room.users.indexOf(user.id);
-                            if (index > -1) {
-                                room.users.splice(index, 1);
-                            }
-                        }
-                    });
+                    user.roomId = null;
+                    changed = true;
                 }
             });
             
-            saveData();
-            sendToServer();
-            updateUserList();
+            if (changed) {
+                saveData();
+                updateUserList();
+            }
         }
         
         function startCleanupTimers() {
-            // Очистка старых комнат (1 час)
+            // Очистка старых комнат
             setInterval(() => {
                 const now = new Date();
+                let changed = false;
+                
                 rooms.forEach(room => {
                     if (room.isActive && new Date(room.expiresAt) < now) {
                         room.isActive = false;
+                        changed = true;
                     }
                 });
                 
-                // Удаляем очень старые комнаты (старше 2 часов)
+                // Удаляем очень старые комнаты
                 const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-                rooms = rooms.filter(room => new Date(room.createdAt) > twoHoursAgo);
+                const newRooms = rooms.filter(room => new Date(room.createdAt) > twoHoursAgo);
                 
-                saveData();
-                sendToServer();
-                updateRoomList();
+                if (newRooms.length !== rooms.length) {
+                    rooms = newRooms;
+                    changed = true;
+                }
                 
-            }, 60 * 1000); // Каждую минуту
+                if (changed) {
+                    // Проверяем, активна ли текущая комната
+                    if (currentRoom && !currentRoom.isActive) {
+                        // Находим другую активную комнату
+                        const otherRoom = rooms.find(r => r.isActive);
+                        if (otherRoom) {
+                            currentRoom = otherRoom;
+                            currentUser.roomId = otherRoom.id;
+                        } else {
+                            createNewRoom();
+                        }
+                    }
+                    
+                    saveData();
+                    updateRoomList();
+                    updateUserList();
+                }
+                
+            }, 60000); // Каждую минуту
+        }
+        
+        // ========== СИНХРОНИЗАЦИЯ ==========
+        function startSync() {
+            // Синхронизация каждые 3 секунды
+            setInterval(syncData, 3000);
+        }
+        
+        function syncData() {
+            // Загружаем данные с "сервера"
+            const serverData = localStorage.getItem(SERVER_KEY);
+            if (serverData) {
+                try {
+                    const data = JSON.parse(serverData);
+                    
+                    // Синхронизируем пользователей
+                    if (data.users) {
+                        // Обновляем только если данные новее
+                        const ourUsers = users;
+                        users = mergeUserArrays(ourUsers, data.users);
+                    }
+                    
+                    // Синхронизируем комнаты
+                    if (data.rooms) {
+                        const ourRooms = rooms;
+                        rooms = mergeRoomArrays(ourRooms, data.rooms);
+                        
+                        // Обновляем текущую комнату
+                        if (currentRoom) {
+                            const updatedRoom = rooms.find(r => r.id === currentRoom.id);
+                            if (updatedRoom) {
+                                currentRoom = updatedRoom;
+                            }
+                        }
+                    }
+                    
+                    // Синхронизируем сообщения
+                    if (data.messages) {
+                        messageQueue = mergeMessageArrays(messageQueue, data.messages);
+                    }
+                    
+                    // Обновляем интерфейс
+                    if (chatInterface.style.display !== 'none') {
+                        updateUserList();
+                        updateRoomList();
+                        
+                        // Проверяем новые сообщения
+                        const roomMessages = messageQueue.filter(msg => msg.roomId === currentRoom?.id);
+                        const currentMsgIds = Array.from(messagesContainer.children)
+                            .filter(el => el.classList.contains('message'))
+                            .map(el => el.dataset.messageId);
+                        
+                        // Добавляем новые сообщения
+                        roomMessages.forEach(msg => {
+                            if (!currentMsgIds.includes(msg.id)) {
+                                const isOwn = msg.userId === currentUser?.id;
+                                displayMessage(msg, isOwn);
+                            }
+                        });
+                    }
+                    
+                } catch (e) {
+                    console.error('Ошибка синхронизации:', e);
+                }
+            }
+            
+            // Отправляем наши данные на "сервер"
+            if (currentUser) {
+                const serverData = {
+                    users: users,
+                    rooms: rooms,
+                    messages: messageQueue,
+                    lastUpdate: new Date().toISOString()
+                };
+                
+                localStorage.setItem(SERVER_KEY, JSON.stringify(serverData));
+            }
+        }
+        
+        function mergeUserArrays(arr1, arr2) {
+            const merged = [...arr1];
+            
+            arr2.forEach(user2 => {
+                const existingIndex = merged.findIndex(u => u.id === user2.id);
+                if (existingIndex === -1) {
+                    merged.push(user2);
+                } else {
+                    // Выбираем более свежие данные
+                    const existing = merged[existingIndex];
+                    if (new Date(user2.lastActive) > new Date(existing.lastActive)) {
+                        merged[existingIndex] = user2;
+                    }
+                }
+            });
+            
+            return merged;
+        }
+        
+        function mergeRoomArrays(arr1, arr2) {
+            const merged = [...arr1];
+            
+            arr2.forEach(room2 => {
+                const existingIndex = merged.findIndex(r => r.id === room2.id);
+                if (existingIndex === -1) {
+                    merged.push(room2);
+                } else {
+                    // Выбираем более свежие данные
+                    merged[existingIndex] = room2;
+                }
+            });
+            
+            return merged;
+        }
+        
+        function mergeMessageArrays(arr1, arr2) {
+            const merged = [...arr1];
+            
+            arr2.forEach(msg2 => {
+                const existingIndex = merged.findIndex(m => m.id === msg2.id);
+                if (existingIndex === -1) {
+                    merged.push(msg2);
+                }
+            });
+            
+            // Сортируем по времени
+            return merged.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         }
         
         // ========== СОХРАНЕНИЕ ДАННЫХ ==========
         function saveData() {
-            localStorage.setItem('bindr-users', JSON.stringify(users));
-            localStorage.setItem('bindr-rooms', JSON.stringify(rooms));
             if (currentUser) {
-                localStorage.setItem('bindr-current-user', JSON.stringify(currentUser));
+                localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
             }
-            if (currentRoom) {
-                localStorage.setItem('bindr-current-room', JSON.stringify(currentRoom));
-            }
+            
+            const serverData = {
+                users: users,
+                rooms: rooms,
+                messages: messageQueue,
+                lastUpdate: new Date().toISOString()
+            };
+            
+            localStorage.setItem(SERVER_KEY, JSON.stringify(serverData));
         }
         
         function loadData() {
-            // Пользователи
-            const savedUsers = localStorage.getItem('bindr-users');
-            if (savedUsers) {
-                users = JSON.parse(savedUsers);
-            }
-            
-            // Комнаты
-            const savedRooms = localStorage.getItem('bindr-rooms');
-            if (savedRooms) {
-                rooms = JSON.parse(savedRooms);
-            }
-            
-            // Текущий пользователь
-            const savedCurrentUser = localStorage.getItem('bindr-current-user');
-            if (savedCurrentUser) {
-                currentUser = JSON.parse(savedCurrentUser);
-                isModerator = currentUser.isModerator || false;
-            }
-            
-            // Текущая комната
-            const savedCurrentRoom = localStorage.getItem('bindr-current-room');
-            if (savedCurrentRoom) {
-                currentRoom = JSON.parse(savedCurrentRoom);
+            // Загружаем данные с сервера
+            const serverData = localStorage.getItem(SERVER_KEY);
+            if (serverData) {
+                try {
+                    const data = JSON.parse(serverData);
+                    users = data.users || [];
+                    rooms = data.rooms || [];
+                    messageQueue = data.messages || [];
+                } catch (e) {
+                    console.error('Ошибка загрузки данных:', e);
+                    users = [];
+                    rooms = [];
+                    messageQueue = [];
+                }
             }
         }
         
@@ -1506,40 +1372,25 @@
                 const userIndex = users.findIndex(u => u.id === currentUser.id);
                 if (userIndex > -1) {
                     users[userIndex].isOnline = false;
-                }
-                
-                // Удаляем из комнаты
-                if (currentRoom && currentRoom.users) {
-                    const roomUserIndex = currentRoom.users.indexOf(currentUser.id);
-                    if (roomUserIndex > -1) {
-                        currentRoom.users.splice(roomUserIndex, 1);
-                    }
+                    users[userIndex].roomId = null;
                 }
                 
                 saveData();
-                sendToServer();
+                
+                // Очищаем текущего пользователя
+                localStorage.removeItem(USER_KEY);
             }
-            
-            // Очищаем текущего пользователя
-            localStorage.removeItem('bindr-current-user');
-            
-            // Показываем экран входа
-            chatInterface.style.display = 'none';
-            loginScreen.style.display = 'flex';
-            
-            // Очищаем поля
-            usernameInput.value = '';
-            passwordInput.value = '';
-            moderatorPrompt.style.display = 'none';
-            passwordInput.style.display = 'none';
-            loginButton.textContent = 'Войти в чат';
-            loginButton.classList.remove('moderator');
             
             // Сбрасываем данные
             currentUser = null;
             isModerator = false;
             
-            // Фокусируемся на поле ввода
+            // Показываем экран входа
+            chatInterface.style.display = 'none';
+            loginScreen.style.display = 'flex';
+            
+            // Очищаем поле
+            usernameInput.value = '';
             usernameInput.focus();
             
             showNotification('Вы вышли из чата', 'info');
