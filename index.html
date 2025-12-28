@@ -54,6 +54,28 @@
             overflow: hidden;
         }
 
+        /* Добавляем стили для лоадера */
+        .loader {
+            border: 3px solid var(--bg-tertiary);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            text-align: center;
+            margin-top: 10px;
+            color: var(--text-secondary);
+        }
+
         .container {
             display: flex;
             height: 100vh;
@@ -179,13 +201,40 @@
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.3s;
+            position: relative;
+            min-height: 50px;
         }
 
-        .login-btn:hover {
-            background-color: var(--accent-hover);
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
         }
 
-        /* УДАЛЕНО: .moderator-note */
+        .login-btn .btn-text {
+            visibility: visible;
+        }
+
+        .login-btn.loading .btn-text {
+            visibility: hidden;
+        }
+
+        .login-btn .loader-small {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        .login-btn.loading .loader-small {
+            display: block;
+        }
 
         .rooms-section, .users-section {
             padding: 20px;
@@ -429,6 +478,28 @@
             padding: 20px;
             color: var(--text-secondary);
         }
+
+        .error-message {
+            color: var(--error);
+            background-color: rgba(244, 67, 54, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -444,10 +515,17 @@
                    autocomplete="off">
             
             <button id="loginButton" class="login-btn">
-                <i class="fas fa-sign-in-alt"></i> Войти в чат
+                <span class="btn-text"><i class="fas fa-sign-in-alt"></i> Войти в чат</span>
+                <div class="loader-small"></div>
             </button>
             
-            <!-- УДАЛЕНО: блок с упоминанием имени модератора -->
+            <div id="loginError" class="error-message hidden"></div>
+            
+            <!-- Отладочная информация (можно удалить после исправления) -->
+            <div id="debugInfo" style="margin-top: 20px; font-size: 12px; color: #666; text-align: left; display: none;">
+                <h4>Отладочная информация:</h4>
+                <div id="debugStatus">Статус: Ожидание...</div>
+            </div>
         </div>
     </div>
 
@@ -511,9 +589,8 @@
             
             <!-- Сообщения -->
             <div id="messagesContainer" class="messages-container">
-                <div class="system-message">
-                    Добро пожаловать в BINDR! Сообщения загружаются...
-                </div>
+                <div class="loader"></div>
+                <div class="loader-text">Подключение к чату...</div>
             </div>
             
             <!-- Ввод сообщения -->
@@ -527,6 +604,11 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <!-- Отладочная панель -->
+    <div id="debugPanel" class="debug-info">
+        <div>Статус: <span id="debugStatusText">Загрузка...</span></div>
     </div>
 
     <!-- Аудио для уведомлений -->
@@ -543,11 +625,21 @@
     
     <!-- Основной скрипт -->
     <script>
+        // Включаем отладку
+        const DEBUG = true;
+        
         // Конфигурация Supabase
         const SUPABASE_URL = 'https://aubqtfklrusrwrpkymvr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1YnF0ZmtscnVzcndycGt5bXZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5MTg3MTksImV4cCI6MjA4MjQ5NDcxOX0.eOXabojRBvHZMYCu1dGnjStnm0eX8_dv-o1DwojEQs8';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Инициализация Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: false
+            }
+        });
         
         // Глобальные переменные
         let currentUser = null;
@@ -561,6 +653,7 @@
         const chatInterface = document.getElementById('chatInterface');
         const usernameInput = document.getElementById('usernameInput');
         const loginButton = document.getElementById('loginButton');
+        const loginError = document.getElementById('loginError');
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
         const messagesContainer = document.getElementById('messagesContainer');
@@ -575,12 +668,51 @@
         const moderatorControls = document.getElementById('moderatorControls');
         const messageSound = document.getElementById('messageSound');
         const joinSound = document.getElementById('joinSound');
+        const debugPanel = document.getElementById('debugPanel');
+        const debugStatusText = document.getElementById('debugStatusText');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugStatus = document.getElementById('debugStatus');
+        
+        // Показать отладочную информацию
+        if (DEBUG) {
+            debugPanel.style.display = 'block';
+            debugInfo.style.display = 'block';
+        }
+        
+        function updateDebugStatus(message) {
+            if (DEBUG) {
+                console.log('DEBUG:', message);
+                debugStatusText.textContent = message;
+                debugStatus.textContent = `Статус: ${message}`;
+            }
+        }
         
         // Инициализация приложения
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            updateDebugStatus('Загрузка приложения...');
+            
             const savedTheme = localStorage.getItem('bindr-theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
             updateThemeIcon(savedTheme);
+            
+            // Проверяем подключение к Supabase
+            try {
+                updateDebugStatus('Проверка подключения к Supabase...');
+                
+                // Простая проверка подключения
+                const { data, error } = await supabase
+                    .from('rooms')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    updateDebugStatus(`Ошибка подключения: ${error.message}`);
+                    showNotification('Ошибка подключения к базе данных', 'error');
+                } else {
+                    updateDebugStatus('Подключение к Supabase успешно');
+                }
+            } catch (error) {
+                updateDebugStatus(`Ошибка: ${error.message}`);
+            }
             
             // Назначаем обработчики событий
             loginButton.addEventListener('click', handleLogin);
@@ -604,6 +736,8 @@
             // Запускаем периодическую очистку
             setInterval(cleanupInactiveUsers, 60000);
             setInterval(cleanupOldRooms, 300000);
+            
+            updateDebugStatus('Приложение готово');
         });
         
         // Обработчик входа
@@ -611,115 +745,202 @@
             const username = usernameInput.value.trim();
             
             if (!username) {
-                showNotification('Введите имя пользователя', 'error');
+                showLoginError('Введите имя пользователя');
                 return;
             }
             
-            // Проверяем, не занято ли имя
-            const { data: existingUser } = await supabase
-                .from('users')
-                .select('username')
-                .eq('username', username)
-                .eq('is_online', true)
-                .single();
+            // Показываем лоадер
+            loginButton.classList.add('loading');
+            loginButton.disabled = true;
+            loginError.classList.add('hidden');
+            updateDebugStatus(`Попытка входа: ${username}`);
             
-            if (existingUser) {
-                showNotification('Это имя уже занято', 'error');
-                return;
-            }
-            
-            // Проверяем, является ли пользователь модератором
-            // Только здесь проверяется специальное имя модератора
-            isModerator = username.toLowerCase() === 'iammoderator';
-            
-            // Находим или создаем комнату
-            const { data: room, error: roomError } = await supabase
-                .rpc('find_or_create_room');
-            
-            if (roomError) {
-                console.error('Ошибка при поиске комнаты:', roomError);
-                showNotification('Ошибка при создании комнаты', 'error');
-                return;
-            }
-            
-            // Получаем информацию о комнате
-            const { data: roomData } = await supabase
-                .from('rooms')
-                .select('*')
-                .eq('id', room)
-                .single();
-            
-            if (!roomData) {
-                showNotification('Ошибка при получении информации о комнате', 'error');
-                return;
-            }
-            
-            // Проверяем, есть ли место в комнате
-            if (roomData.current_users >= roomData.max_users) {
-                showNotification('В комнате нет свободных мест', 'error');
-                return;
-            }
-            
-            currentRoom = roomData;
-            
-            // Создаем пользователя
-            const { data: user, error: userError } = await supabase
-                .from('users')
-                .insert([
-                    {
-                        username: username,
-                        room_id: roomData.id,
-                        is_online: true,
-                        is_moderator: isModerator,
-                        last_active: new Date().toISOString()
+            try {
+                // Шаг 1: Проверяем, не занято ли имя
+                updateDebugStatus('Проверка имени пользователя...');
+                const { data: existingUser, error: checkError } = await supabase
+                    .from('users')
+                    .select('username')
+                    .eq('username', username)
+                    .eq('is_online', true)
+                    .single();
+                
+                if (checkError && checkError.code !== 'PGRST116') {
+                    // PGRST116 - это "не найдено", что нормально
+                    throw new Error(`Ошибка проверки имени: ${checkError.message}`);
+                }
+                
+                if (existingUser) {
+                    showLoginError('Это имя уже занято. Попробуйте другое.');
+                    updateDebugStatus('Имя уже занято');
+                    return;
+                }
+                
+                updateDebugStatus('Имя свободно');
+                
+                // Шаг 2: Проверяем, является ли пользователь модератором
+                isModerator = username.toLowerCase() === 'iammoderator';
+                updateDebugStatus(isModerator ? 'Вход как модератор' : 'Вход как обычный пользователь');
+                
+                // Шаг 3: Находим или создаем комнату
+                updateDebugStatus('Поиск или создание комнаты...');
+                const { data: room, error: roomError } = await supabase
+                    .rpc('find_or_create_room');
+                
+                if (roomError) {
+                    // Если функция не найдена, создаем комнату вручную
+                    updateDebugStatus(`Функция не найдена, создаем комнату вручную: ${roomError.message}`);
+                    
+                    // Ищем доступную комнату
+                    const { data: availableRooms } = await supabase
+                        .from('rooms')
+                        .select('*')
+                        .eq('is_active', true)
+                        .lt('current_users', 34)
+                        .gt('expires_at', new Date().toISOString())
+                        .limit(1);
+                    
+                    if (availableRooms && availableRooms.length > 0) {
+                        // Используем существующую комнату
+                        currentRoom = availableRooms[0];
+                        updateDebugStatus(`Найдена комната: ${currentRoom.name}`);
+                    } else {
+                        // Создаем новую комнату
+                        const roomName = `Комната ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                        const { data: newRoom, error: createError } = await supabase
+                            .from('rooms')
+                            .insert([
+                                {
+                                    name: roomName,
+                                    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString()
+                                }
+                            ])
+                            .select()
+                            .single();
+                        
+                        if (createError) {
+                            throw new Error(`Ошибка создания комнаты: ${createError.message}`);
+                        }
+                        
+                        currentRoom = newRoom;
+                        updateDebugStatus(`Создана новая комната: ${currentRoom.name}`);
                     }
-                ])
-                .select()
-                .single();
-            
-            if (userError) {
-                console.error('Ошибка при создании пользователя:', userError);
-                showNotification('Ошибка при создании пользователя', 'error');
-                return;
+                } else {
+                    // Используем комнату из функции
+                    updateDebugStatus('Комната получена из функции');
+                    
+                    // Получаем информацию о комнате
+                    const { data: roomData, error: roomDataError } = await supabase
+                        .from('rooms')
+                        .select('*')
+                        .eq('id', room)
+                        .single();
+                    
+                    if (roomDataError) {
+                        throw new Error(`Ошибка получения информации о комнате: ${roomDataError.message}`);
+                    }
+                    
+                    currentRoom = roomData;
+                    updateDebugStatus(`Комната: ${currentRoom.name}`);
+                }
+                
+                // Шаг 4: Проверяем, есть ли место в комнате
+                if (currentRoom.current_users >= 34) {
+                    showLoginError('В комнате нет свободных мест. Попробуйте позже.');
+                    updateDebugStatus('В комнате нет мест');
+                    return;
+                }
+                
+                // Шаг 5: Создаем пользователя
+                updateDebugStatus('Создание пользователя...');
+                const { data: user, error: userError } = await supabase
+                    .from('users')
+                    .insert([
+                        {
+                            username: username,
+                            room_id: currentRoom.id,
+                            is_online: true,
+                            is_moderator: isModerator,
+                            last_active: new Date().toISOString()
+                        }
+                    ])
+                    .select()
+                    .single();
+                
+                if (userError) {
+                    // Если ошибка дублирования имени, пробуем с другим ID
+                    if (userError.code === '23505') { // unique_violation
+                        updateDebugStatus('Конфликт имен, пробуем снова...');
+                        // Ждем немного и пробуем снова
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        return handleLogin(); // Рекурсивный вызов
+                    }
+                    throw new Error(`Ошибка создания пользователя: ${userError.message}`);
+                }
+                
+                currentUser = user;
+                updateDebugStatus(`Пользователь создан: ${user.id}`);
+                
+                // Шаг 6: Показываем интерфейс чата
+                updateDebugStatus('Переход к интерфейсу чата...');
+                loginScreen.classList.add('hidden');
+                chatInterface.classList.remove('hidden');
+                
+                // Шаг 7: Загружаем данные
+                updateDebugStatus('Загрузка данных...');
+                await updateCurrentRoomInfo();
+                await loadMessages();
+                await loadRooms();
+                await loadUsers();
+                
+                // Шаг 8: Настраиваем подписки
+                updateDebugStatus('Настройка подписок...');
+                setupRealtimeSubscriptions();
+                
+                // Шаг 9: Запускаем таймер активности
+                resetActivityTimer();
+                
+                // Шаг 10: Показываем уведомление
+                const welcomeMsg = isModerator 
+                    ? `Добро пожаловать, модератор!` 
+                    : `Добро пожаловать, ${username}!`;
+                showNotification(welcomeMsg, 'success');
+                updateDebugStatus(welcomeMsg);
+                
+                // Проигрываем звук входа
+                playSound('join');
+                
+                // Показываем контролы модератора
+                if (isModerator) {
+                    moderatorControls.classList.remove('hidden');
+                    updateDebugStatus('Контролы модератора активированы');
+                }
+                
+                updateDebugStatus('Вход выполнен успешно');
+                
+            } catch (error) {
+                console.error('Ошибка входа:', error);
+                updateDebugStatus(`Ошибка: ${error.message}`);
+                showLoginError(`Ошибка входа: ${error.message}. Попробуйте снова.`);
+            } finally {
+                // Скрываем лоадер
+                loginButton.classList.remove('loading');
+                loginButton.disabled = false;
             }
-            
-            currentUser = user;
-            
-            // Показываем интерфейс чата
-            loginScreen.classList.add('hidden');
-            chatInterface.classList.remove('hidden');
-            
-            // Обновляем интерфейс
-            updateCurrentRoomInfo();
-            loadMessages();
-            loadRooms();
-            loadUsers();
-            
-            // Настраиваем подписки на реальные обновления
-            setupRealtimeSubscriptions();
-            
-            // Запускаем таймер активности
-            resetActivityTimer();
-            
-            // Показываем уведомление
-            const welcomeMsg = isModerator 
-                ? `Добро пожаловать, модератор!` 
-                : `Добро пожаловать, ${username}!`;
-            showNotification(welcomeMsg, 'success');
-            
-            // Проигрываем звук входа
-            playSound('join');
-            
-            // Показываем контролы модератора
-            if (isModerator) {
-                moderatorControls.classList.remove('hidden');
-            }
+        }
+        
+        // Показать ошибку входа
+        function showLoginError(message) {
+            loginError.textContent = message;
+            loginError.classList.remove('hidden');
         }
         
         // Настройка подписок на реальные обновления
         function setupRealtimeSubscriptions() {
+            updateDebugStatus('Настройка подписок на обновления...');
+            
             // Подписка на новые сообщения
-            supabase
+            const messagesChannel = supabase
                 .channel('messages-channel')
                 .on('postgres_changes', 
                     { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${currentRoom.id}` },
@@ -728,13 +949,16 @@
                         if (newMessage.user_id !== currentUser.id) {
                             displayMessage(newMessage);
                             playSound('message');
+                            updateDebugStatus('Новое сообщение получено');
                         }
                     }
                 )
-                .subscribe();
+                .subscribe((status) => {
+                    updateDebugStatus(`Подписка на сообщения: ${status}`);
+                });
             
             // Подписка на изменения пользователей
-            supabase
+            const usersChannel = supabase
                 .channel('users-channel')
                 .on('postgres_changes', 
                     { event: '*', schema: 'public', table: 'users', filter: `room_id=eq.${currentRoom.id}` },
@@ -743,18 +967,20 @@
                         
                         if (payload.eventType === 'INSERT' && payload.new.id !== currentUser.id) {
                             playSound('join');
-                            // Не показываем имя модератора в уведомлениях
                             const username = payload.new.username === 'iammoderator' 
                                 ? 'Модератор' 
                                 : payload.new.username;
                             showNotification(`${username} присоединился к чату`, 'info');
+                            updateDebugStatus(`Новый пользователь: ${username}`);
                         }
                     }
                 )
-                .subscribe();
+                .subscribe((status) => {
+                    updateDebugStatus(`Подписка на пользователей: ${status}`);
+                });
             
             // Подписка на изменения комнат
-            supabase
+            const roomsChannel = supabase
                 .channel('rooms-channel')
                 .on('postgres_changes', 
                     { event: '*', schema: 'public', table: 'rooms' },
@@ -763,13 +989,16 @@
                         
                         if (payload.eventType === 'DELETE' && payload.old.id === currentRoom.id) {
                             showNotification('Комната была удалена', 'warning');
+                            updateDebugStatus('Текущая комната удалена');
                             setTimeout(() => {
                                 window.location.reload();
                             }, 3000);
                         }
                     }
                 )
-                .subscribe();
+                .subscribe((status) => {
+                    updateDebugStatus(`Подписка на комнаты: ${status}`);
+                });
         }
         
         // Отправка сообщения
@@ -794,6 +1023,7 @@
             if (error) {
                 console.error('Ошибка при отправке сообщения:', error);
                 showNotification('Ошибка при отправке сообщения', 'error');
+                updateDebugStatus(`Ошибка отправки: ${error.message}`);
                 return;
             }
             
@@ -806,6 +1036,8 @@
         
         // Загрузка сообщений
         async function loadMessages() {
+            updateDebugStatus('Загрузка сообщений...');
+            
             const { data: messages, error } = await supabase
                 .from('messages')
                 .select('*')
@@ -814,23 +1046,33 @@
             
             if (error) {
                 console.error('Ошибка при загрузке сообщений:', error);
+                updateDebugStatus(`Ошибка загрузки сообщений: ${error.message}`);
                 return;
             }
             
             messagesContainer.innerHTML = '';
             
-            const systemMsg = document.createElement('div');
-            systemMsg.className = 'system-message';
-            systemMsg.textContent = `Вы вошли в комнату "${currentRoom.name}"`;
-            messagesContainer.appendChild(systemMsg);
-            
-            messages.forEach(message => {
-                displayMessage(message);
-            });
+            if (messages.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.className = 'system-message';
+                emptyMsg.textContent = 'В этой комнате еще нет сообщений. Будьте первым!';
+                messagesContainer.appendChild(emptyMsg);
+            } else {
+                const systemMsg = document.createElement('div');
+                systemMsg.className = 'system-message';
+                systemMsg.textContent = `Вы вошли в комнату "${currentRoom.name}"`;
+                messagesContainer.appendChild(systemMsg);
+                
+                messages.forEach(message => {
+                    displayMessage(message);
+                });
+            }
             
             setTimeout(() => {
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }, 100);
+            
+            updateDebugStatus(`Загружено ${messages.length} сообщений`);
         }
         
         // Отображение сообщения
@@ -843,7 +1085,6 @@
                 minute: '2-digit' 
             });
             
-            // Маскируем имя модератора в чате
             const displayUsername = message.username === 'iammoderator' 
                 ? 'Модератор' 
                 : message.username;
@@ -870,39 +1111,39 @@
             
             if (error) {
                 console.error('Ошибка при загрузке комнат:', error);
-                roomList.innerHTML = '<div class="error">Ошибка загрузки комнат</div>';
+                roomList.innerHTML = '<div class="error-message">Ошибка загрузки комнат</div>';
                 return;
             }
             
-            const activeRooms = rooms.filter(room => room.current_users < room.max_users);
+            const activeRooms = rooms.filter(room => room.current_users < 34);
             roomCount.textContent = `${activeRooms.length}/34`;
             
             roomList.innerHTML = '';
             
-            activeRooms.forEach(room => {
-                const roomElement = document.createElement('div');
-                roomElement.className = `room-item ${room.id === currentRoom.id ? 'active' : ''}`;
-                roomElement.dataset.roomId = room.id;
-                
-                const expiryTime = new Date(room.expires_at);
-                const timeLeft = Math.max(0, Math.floor((expiryTime - new Date()) / 60000));
-                
-                roomElement.innerHTML = `
-                    <div class="room-info">
-                        <div class="room-name">${room.name}</div>
-                        <div class="room-stats">${room.current_users}/${room.max_users} пользователей • ${timeLeft} мин осталось</div>
-                    </div>
-                `;
-                
-                if (room.id !== currentRoom.id) {
-                    roomElement.addEventListener('click', () => switchRoom(room.id));
-                }
-                
-                roomList.appendChild(roomElement);
-            });
-            
             if (activeRooms.length === 0) {
                 roomList.innerHTML = '<div class="system-message">Нет доступных комнат</div>';
+            } else {
+                activeRooms.forEach(room => {
+                    const roomElement = document.createElement('div');
+                    roomElement.className = `room-item ${room.id === currentRoom.id ? 'active' : ''}`;
+                    roomElement.dataset.roomId = room.id;
+                    
+                    const expiryTime = new Date(room.expires_at);
+                    const timeLeft = Math.max(0, Math.floor((expiryTime - new Date()) / 60000));
+                    
+                    roomElement.innerHTML = `
+                        <div class="room-info">
+                            <div class="room-name">${room.name}</div>
+                            <div class="room-stats">${room.current_users}/34 пользователей • ${timeLeft} мин осталось</div>
+                        </div>
+                    `;
+                    
+                    if (room.id !== currentRoom.id) {
+                        roomElement.addEventListener('click', () => switchRoom(room.id));
+                    }
+                    
+                    roomList.appendChild(roomElement);
+                });
             }
         }
         
@@ -917,47 +1158,50 @@
             
             if (error) {
                 console.error('Ошибка при загрузке пользователей:', error);
-                userList.innerHTML = '<div class="error">Ошибка загрузки пользователей</div>';
+                userList.innerHTML = '<div class="error-message">Ошибка загрузки пользователей</div>';
                 return;
             }
             
             userCount.textContent = users.length;
             userList.innerHTML = '';
             
-            users.forEach(user => {
-                const userElement = document.createElement('div');
-                userElement.className = 'user-item';
-                userElement.dataset.userId = user.id;
-                
-                // Маскируем имя модератора в списке пользователей
-                const displayName = user.username === 'iammoderator' 
-                    ? 'Модератор' 
-                    : user.username;
-                
-                const firstLetter = displayName.charAt(0).toUpperCase();
-                const isUserModerator = user.username === 'iammoderator';
-                
-                userElement.innerHTML = `
-                    <div class="user-info">
-                        <div class="user-avatar ${isUserModerator ? 'user-moderator' : ''}">${firstLetter}</div>
-                        <div class="user-name">${displayName} ${isUserModerator ? '<i class="fas fa-shield-alt" style="color: var(--moderator); margin-left: 5px;"></i>' : ''}</div>
-                    </div>
-                `;
-                
-                if (isModerator && user.id !== currentUser.id) {
-                    const modBtn = document.createElement('button');
-                    modBtn.className = 'mod-btn delete-user-btn';
-                    modBtn.innerHTML = '<i class="fas fa-user-times"></i>';
-                    modBtn.title = 'Удалить пользователя';
-                    modBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        deleteUser(user.id);
-                    });
-                    userElement.appendChild(modBtn);
-                }
-                
-                userList.appendChild(userElement);
-            });
+            if (users.length === 0) {
+                userList.innerHTML = '<div class="system-message">В комнате нет пользователей</div>';
+            } else {
+                users.forEach(user => {
+                    const userElement = document.createElement('div');
+                    userElement.className = 'user-item';
+                    userElement.dataset.userId = user.id;
+                    
+                    const displayName = user.username === 'iammoderator' 
+                        ? 'Модератор' 
+                        : user.username;
+                    
+                    const firstLetter = displayName.charAt(0).toUpperCase();
+                    const isUserModerator = user.username === 'iammoderator';
+                    
+                    userElement.innerHTML = `
+                        <div class="user-info">
+                            <div class="user-avatar ${isUserModerator ? 'user-moderator' : ''}">${firstLetter}</div>
+                            <div class="user-name">${displayName} ${isUserModerator ? '<i class="fas fa-shield-alt" style="color: var(--moderator); margin-left: 5px;"></i>' : ''}</div>
+                        </div>
+                    `;
+                    
+                    if (isModerator && user.id !== currentUser.id) {
+                        const modBtn = document.createElement('button');
+                        modBtn.className = 'mod-btn delete-user-btn';
+                        modBtn.innerHTML = '<i class="fas fa-user-times"></i>';
+                        modBtn.title = 'Удалить пользователя';
+                        modBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            deleteUser(user.id);
+                        });
+                        userElement.appendChild(modBtn);
+                    }
+                    
+                    userList.appendChild(userElement);
+                });
+            }
         }
         
         // Смена комнаты
@@ -973,7 +1217,7 @@
                 return;
             }
             
-            if (room.current_users >= room.max_users) {
+            if (room.current_users >= 34) {
                 showNotification('В комнате нет свободных мест', 'error');
                 return;
             }
@@ -1075,6 +1319,7 @@
                     
                     if (!error) {
                         showNotification('Вы были отключены за неактивность', 'warning');
+                        updateDebugStatus('Отключен за неактивность');
                         setTimeout(() => {
                             window.location.reload();
                         }, 3000);
@@ -1114,7 +1359,7 @@
         }
         
         // Обновление информации о текущей комнате
-        function updateCurrentRoomInfo() {
+        async function updateCurrentRoomInfo() {
             if (!currentRoom) return;
             
             currentRoomName.textContent = currentRoom.name;
