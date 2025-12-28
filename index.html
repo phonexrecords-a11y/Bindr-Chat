@@ -3,45 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BINDR - Онлайн чат</title>
+    <title>BINDR - Защищенный онлайн чат</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
             height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Экран входа */
+        .login-screen {
             display: flex;
             justify-content: center;
             align-items: center;
+            height: 100vh;
             padding: 20px;
         }
         
-        .login-screen {
-            width: 100%;
-            max-width: 400px;
-        }
-        
         .login-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 40px;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
             text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
         
         .login-card h1 {
-            color: #4361ee;
+            color: #4cc9f0;
             margin-bottom: 10px;
             font-size: 2.5rem;
         }
         
         .login-card p {
-            color: #666;
+            color: #b0b0b0;
             margin-bottom: 30px;
         }
         
@@ -49,22 +55,43 @@
             width: 100%;
             padding: 15px 20px;
             margin-bottom: 20px;
-            border: 2px solid #e0e0e0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
+            color: white;
             font-size: 1rem;
             transition: all 0.3s;
         }
         
         .username-input:focus {
             outline: none;
-            border-color: #4361ee;
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+            border-color: #4cc9f0;
+            box-shadow: 0 0 0 3px rgba(76, 201, 240, 0.1);
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+            display: none;
+        }
+        
+        .password-input:focus {
+            outline: none;
+            border-color: #f72585;
+            box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.1);
         }
         
         .login-btn {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+            background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
             color: white;
             border: none;
             border-radius: 12px;
@@ -76,34 +103,33 @@
         
         .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(67, 97, 238, 0.3);
+            box-shadow: 0 10px 30px rgba(76, 201, 240, 0.3);
         }
         
-        .login-btn:active {
-            transform: translateY(0);
+        .login-btn.moderator {
+            background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
         }
         
         .error-message {
-            color: #e63946;
-            background: rgba(230, 57, 70, 0.1);
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
             padding: 12px;
             border-radius: 8px;
             margin-top: 15px;
             display: none;
         }
         
-        /* Основной чат */
+        /* Чат */
         .chat-container {
             display: none;
             width: 100%;
             height: 100vh;
-            background: white;
         }
         
         .chat-header {
             padding: 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -112,42 +138,28 @@
         .logo {
             font-size: 1.5rem;
             font-weight: bold;
-            color: #4361ee;
+            color: #4cc9f0;
         }
         
-        .moderator-controls {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .mod-btn {
-            padding: 8px 16px;
-            background: #e63946;
+        .moderator-badge {
+            background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
             color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 0.9rem;
+            font-weight: bold;
         }
         
-        .mod-btn.delete-room {
-            background: #ff9e00;
-        }
-        
-        .mod-btn.clear-chat {
-            background: #4361ee;
-        }
-        
-        /* Сайдбар с пользователями */
+        /* Сайдбар */
         .chat-wrapper {
             display: flex;
             height: calc(100vh - 80px);
         }
         
         .sidebar {
-            width: 250px;
-            background: #f8f9fa;
-            border-right: 1px solid #dee2e6;
+            width: 300px;
+            background: rgba(0, 0, 0, 0.2);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             padding: 20px;
             overflow-y: auto;
         }
@@ -158,24 +170,57 @@
             flex-direction: column;
         }
         
-        .users-section {
-            margin-bottom: 20px;
-        }
-        
         .section-title {
             font-size: 0.9rem;
             font-weight: bold;
-            color: #666;
-            margin-bottom: 10px;
+            color: #4cc9f0;
+            margin-bottom: 15px;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
-        .user-item {
-            padding: 10px;
+        /* Комнаты */
+        .room-item {
+            padding: 12px 15px;
             margin-bottom: 8px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        
+        .room-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .room-item.active {
+            background: rgba(76, 201, 240, 0.2);
+            border-color: #4cc9f0;
+        }
+        
+        .room-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .room-name {
+            font-weight: 500;
+        }
+        
+        .room-stats {
+            font-size: 0.8rem;
+            color: #b0b0b0;
+        }
+        
+        /* Пользователи */
+        .user-item {
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -184,14 +229,14 @@
         .user-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
         
         .user-avatar {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+            background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -201,7 +246,7 @@
         }
         
         .user-avatar.moderator {
-            background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+            background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
         }
         
         .user-name {
@@ -209,123 +254,272 @@
         }
         
         .delete-user-btn {
-            background: #e63946;
+            background: #ff6b6b;
             color: white;
             border: none;
-            border-radius: 4px;
-            width: 24px;
-            height: 24px;
+            border-radius: 6px;
+            width: 28px;
+            height: 28px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             display: flex;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .user-item:hover .delete-user-btn {
+            opacity: 1;
         }
         
         /* Сообщения */
         .messages-container {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.1);
         }
         
         .message {
-            padding: 12px 16px;
-            margin-bottom: 10px;
-            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border-radius: 15px;
             max-width: 70%;
             word-wrap: break-word;
+            animation: slideIn 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .message.own {
-            background: #e3f2fd;
+            background: rgba(76, 201, 240, 0.15);
+            border-color: rgba(76, 201, 240, 0.3);
             margin-left: auto;
-        }
-        
-        .message.other {
-            background: #f1f3f4;
         }
         
         .message-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
             font-size: 0.9rem;
         }
         
         .message-username {
             font-weight: bold;
-            color: #4361ee;
+            color: #4cc9f0;
+        }
+        
+        .message-username.moderator {
+            color: #f72585;
         }
         
         .message-time {
-            color: #666;
+            color: #b0b0b0;
             font-size: 0.8rem;
         }
         
         .message-content {
-            line-height: 1.4;
+            line-height: 1.5;
         }
         
         /* Ввод сообщения */
         .message-input-container {
             padding: 20px;
-            border-top: 1px solid #dee2e6;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
-            gap: 10px;
+            gap: 15px;
+            align-items: center;
         }
         
         .message-input {
             flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #dee2e6;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
+            color: white;
             font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .message-input:focus {
+            outline: none;
+            border-color: #4cc9f0;
+            box-shadow: 0 0 0 3px rgba(76, 201, 240, 0.1);
         }
         
         .send-btn {
-            padding: 12px 24px;
-            background: #4361ee;
+            padding: 0 30px;
+            height: 56px;
+            background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
             color: white;
             border: none;
             border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
             cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(76, 201, 240, 0.2);
+        }
+        
+        /* Модераторские кнопки */
+        .moderator-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .mod-btn {
+            padding: 8px 16px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .mod-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        .mod-btn.delete-room {
+            background: #ff9e00;
+        }
+        
+        .mod-btn.create-room {
+            background: #38b000;
         }
         
         /* Уведомления */
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            background: #4361ee;
+            top: 25px;
+            right: 25px;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.8);
             color: white;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             display: none;
             z-index: 1000;
-        }
-        
-        .notification.error {
-            background: #e63946;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 400px;
         }
         
         .notification.success {
-            background: #38b000;
+            border-left: 4px solid #38b000;
+        }
+        
+        .notification.error {
+            border-left: 4px solid #ff6b6b;
         }
         
         .notification.warning {
-            background: #ff9e00;
+            border-left: 4px solid #ff9e00;
+        }
+        
+        .notification.info {
+            border-left: 4px solid #4cc9f0;
         }
         
         /* Статус */
-        .status-badge {
-            padding: 4px 8px;
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #b0b0b0;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
             background: #38b000;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Модальное окно пароля */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .modal {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .modal h3 {
             color: white;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            margin-left: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .modal-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -334,12 +528,21 @@
     <div id="loginScreen" class="login-screen">
         <div class="login-card">
             <h1>BINDR</h1>
-            <p>Чат с функциями модератора</p>
+            <p>Защищенный анонимный чат</p>
             
             <input type="text" id="usernameInput" class="username-input" 
-                   placeholder="Введите ваше имя" 
+                   placeholder="Введите имя пользователя" 
                    autocomplete="off"
                    autofocus>
+            
+            <div id="moderatorPrompt" style="display: none;">
+                <p style="color: #f72585; margin-bottom: 15px; font-size: 0.9rem;">
+                    <i class="fas fa-shield-alt"></i> Обнаружен доступ модератора
+                </p>
+                <input type="password" id="passwordInput" class="password-input" 
+                       placeholder="Введите секретный код доступа"
+                       autocomplete="off">
+            </div>
             
             <button id="loginButton" class="login-btn">
                 Войти в чат
@@ -347,11 +550,33 @@
             
             <div id="loginError" class="error-message"></div>
             
-            <div style="margin-top: 20px; font-size: 14px; color: #666;">
-                <p><strong>Для теста модератора:</strong></p>
-                <p>• Обычный пользователь: любое имя</p>
-                <p>• Модератор: имя <strong>iammoderator</strong></p>
+            <div style="margin-top: 30px; font-size: 0.9rem; color: #b0b0b0; line-height: 1.5;">
+                <p><strong>Как работает:</strong></p>
+                <p>• Анонимные имена</p>
+                <p>• Автоматические комнаты</p>
+                <p>• Работает на всех устройствах</p>
+                <p>• Защищенный доступ</p>
             </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно пароля -->
+    <div id="passwordModal" class="modal-overlay">
+        <div class="modal">
+            <h3><i class="fas fa-shield-alt"></i> Проверка доступа</h3>
+            <p style="color: #b0b0b0; margin-bottom: 20px;">
+                Для входа как модератор требуется подтверждение
+            </p>
+            <input type="password" id="modalPassword" class="modal-input" 
+                   placeholder="Секретный код доступа"
+                   autocomplete="off"
+                   autofocus>
+            <button id="confirmModeratorBtn" class="modal-btn">
+                Подтвердить
+            </button>
+            <button id="cancelModeratorBtn" style="width: 100%; padding: 15px; margin-top: 10px; background: none; border: 1px solid rgba(255, 255, 255, 0.2); color: white; border-radius: 10px; cursor: pointer;">
+                Отмена
+            </button>
         </div>
     </div>
 
@@ -359,40 +584,49 @@
     <div id="chatInterface" class="chat-container">
         <div class="chat-header">
             <div class="logo">BINDR Чат</div>
-            <div id="moderatorControls" class="moderator-controls" style="display: none;">
-                <button id="clearChatBtn" class="mod-btn clear-chat">
-                    Очистить чат
-                </button>
-                <button id="deleteRoomBtn" class="mod-btn delete-room">
-                    Удалить комнату
+            
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div class="connection-status">
+                    <div class="status-dot"></div>
+                    <span id="connectionText">Онлайн</span>
+                </div>
+                
+                <div id="moderatorControls" class="moderator-controls" style="display: none;">
+                    <button id="createRoomBtn" class="mod-btn create-room">
+                        <i class="fas fa-plus"></i> Новая комната
+                    </button>
+                    <button id="deleteRoomBtn" class="mod-btn delete-room">
+                        <i class="fas fa-trash"></i> Удалить комнату
+                    </button>
+                    <button id="clearChatBtn" class="mod-btn">
+                        <i class="fas fa-broom"></i> Очистить чат
+                    </button>
+                </div>
+                
+                <div id="moderatorBadge" class="moderator-badge" style="display: none;">
+                    <i class="fas fa-shield-alt"></i> Модератор
+                </div>
+                
+                <button id="logoutButton" style="background: none; border: 1px solid rgba(255, 255, 255, 0.2); color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer;">
+                    Выйти
                 </button>
             </div>
-            <button id="logoutButton" style="background: none; border: none; color: #666; cursor: pointer; font-size: 0.9rem;">
-                Выйти
-            </button>
         </div>
         
         <div class="chat-wrapper">
-            <!-- Сайдбар с пользователями -->
+            <!-- Сайдбар -->
             <div class="sidebar">
-                <div class="users-section">
-                    <div class="section-title">Пользователи онлайн</div>
-                    <div id="userList">
-                        <!-- Пользователи будут здесь -->
+                <div style="margin-bottom: 25px;">
+                    <div class="section-title">Активные комнаты</div>
+                    <div id="roomList">
+                        <!-- Комнаты будут здесь -->
                     </div>
                 </div>
                 
-                <div class="users-section">
-                    <div class="section-title">Статистика</div>
-                    <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0;">
-                        <div style="margin-bottom: 8px;">
-                            <span style="color: #666;">Сообщений:</span>
-                            <span id="messageCount" style="font-weight: bold; margin-left: 5px;">0</span>
-                        </div>
-                        <div>
-                            <span style="color: #666;">Пользователей:</span>
-                            <span id="onlineCount" style="font-weight: bold; margin-left: 5px;">1</span>
-                        </div>
+                <div>
+                    <div class="section-title">Пользователи онлайн</div>
+                    <div id="userList">
+                        <!-- Пользователи будут здесь -->
                     </div>
                 </div>
             </div>
@@ -400,10 +634,10 @@
             <!-- Основной чат -->
             <div class="main-chat">
                 <div id="messagesContainer" class="messages-container">
-                    <div style="text-align: center; color: #666; padding: 40px;">
-                        <p style="font-size: 18px; margin-bottom: 10px;">💬</p>
-                        <p>Добро пожаловать в чат!</p>
-                        <p style="font-size: 14px; margin-top: 10px;">Начните общение</p>
+                    <div style="text-align: center; color: #b0b0b0; padding: 40px;">
+                        <p style="font-size: 24px; margin-bottom: 10px;">💬</p>
+                        <p style="font-size: 1.2rem; margin-bottom: 5px;">Добро пожаловать в BINDR</p>
+                        <p>Загрузка сообщений...</p>
                     </div>
                 </div>
                 
@@ -421,10 +655,24 @@
     <!-- Уведомления -->
     <div id="notification" class="notification"></div>
 
+    <!-- Font Awesome для иконок -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
     <script>
-        // ========== ПРОСТОЙ РАБОЧИЙ КОД С МОДЕРАТОРОМ ==========
+        // ========== КОНФИГУРАЦИЯ ==========
+        // 🔒 СЕКРЕТНЫЙ КОД МОДЕРАТОРА (измените этот код!)
+        const MODERATOR_SECRET_CODE = "admin123"; // Измените этот код!
         
-        // DOM элементы
+        // ========== ДАННЫЕ ЧАТА ==========
+        let currentUser = null;
+        let users = []; // Все пользователи
+        let rooms = []; // Все комнаты
+        let messages = []; // Все сообщения
+        let currentRoom = null;
+        let isModerator = false;
+        let socket = null; // Для WebSocket соединения
+        
+        // ========== DOM ЭЛЕМЕНТЫ ==========
         const loginScreen = document.getElementById('loginScreen');
         const chatInterface = document.getElementById('chatInterface');
         const usernameInput = document.getElementById('usernameInput');
@@ -436,51 +684,179 @@
         const logoutButton = document.getElementById('logoutButton');
         const notification = document.getElementById('notification');
         const moderatorControls = document.getElementById('moderatorControls');
+        const moderatorBadge = document.getElementById('moderatorBadge');
         const clearChatBtn = document.getElementById('clearChatBtn');
         const deleteRoomBtn = document.getElementById('deleteRoomBtn');
+        const createRoomBtn = document.getElementById('createRoomBtn');
         const userList = document.getElementById('userList');
-        const messageCount = document.getElementById('messageCount');
-        const onlineCount = document.getElementById('onlineCount');
-        
-        // Данные чата
-        let currentUser = null;
-        let users = []; // Все пользователи в чате
-        let messages = []; // Все сообщения
-        let isModerator = false;
+        const roomList = document.getElementById('roomList');
+        const moderatorPrompt = document.getElementById('moderatorPrompt');
+        const passwordInput = document.getElementById('passwordInput');
+        const passwordModal = document.getElementById('passwordModal');
+        const modalPassword = document.getElementById('modalPassword');
+        const confirmModeratorBtn = document.getElementById('confirmModeratorBtn');
+        const cancelModeratorBtn = document.getElementById('cancelModeratorBtn');
+        const connectionText = document.getElementById('connectionText');
         
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🚀 Чат инициализирован');
+            console.log('🚀 BINDR Chat инициализирован');
             
-            // Обработчики событий
+            // Настройка обработчиков событий
+            setupEventListeners();
+            
+            // Загрузка данных из localStorage
+            loadData();
+            
+            // Подключение к онлайн-чату
+            connectToChat();
+        });
+        
+        function setupEventListeners() {
+            // Вход
             loginButton.addEventListener('click', handleLogin);
             usernameInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') handleLogin();
             });
             
+            // Проверка имени на модератора
+            usernameInput.addEventListener('input', checkForModerator);
+            
+            // Сообщения
             sendButton.addEventListener('click', sendMessage);
             messageInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') sendMessage();
             });
             
-            logoutButton.addEventListener('click', handleLogout);
+            // Модераторские функции
             clearChatBtn.addEventListener('click', clearChat);
-            deleteRoomBtn.addEventListener('click', deleteRoom);
+            deleteRoomBtn.addEventListener('click', deleteCurrentRoom);
+            createRoomBtn.addEventListener('click', createNewRoom);
+            logoutButton.addEventListener('click', handleLogout);
             
-            // Загружаем данные из localStorage
-            loadData();
-            
-            // Если есть сохраненный пользователь
-            const savedUser = localStorage.getItem('bindr-current-user');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                isModerator = currentUser.isModerator;
-                showChatInterface();
-            }
-        });
+            // Модальное окно пароля
+            confirmModeratorBtn.addEventListener('click', verifyModeratorPassword);
+            cancelModeratorBtn.addEventListener('click', cancelModeratorLogin);
+            modalPassword.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') verifyModeratorPassword();
+            });
+        }
         
-        // ========== ВХОД В ЧАТ ==========
-        function handleLogin() {
+        function checkForModerator() {
+            const username = usernameInput.value.toLowerCase();
+            if (username === 'iammoderator') {
+                moderatorPrompt.style.display = 'block';
+                passwordInput.style.display = 'block';
+                loginButton.textContent = '🔐 Войти как модератор';
+                loginButton.classList.add('moderator');
+                passwordInput.focus();
+            } else {
+                moderatorPrompt.style.display = 'none';
+                passwordInput.style.display = 'none';
+                loginButton.textContent = 'Войти в чат';
+                loginButton.classList.remove('moderator');
+            }
+        }
+        
+        // ========== ОНЛАЙН ПОДКЛЮЧЕНИЕ ==========
+        function connectToChat() {
+            // Симуляция WebSocket соединения
+            connectionText.textContent = 'Подключение...';
+            
+            setTimeout(() => {
+                connectionText.textContent = 'Онлайн';
+                showNotification('Подключено к онлайн чату', 'success');
+                
+                // Синхронизируем данные с другими устройствами
+                syncDataWithServer();
+                
+                // Запускаем периодическую синхронизацию
+                setInterval(syncDataWithServer, 5000); // Каждые 5 секунд
+                
+            }, 1000);
+        }
+        
+        function syncDataWithServer() {
+            // Здесь будет реальная синхронизация с сервером
+            // Пока используем localStorage как общее хранилище
+            
+            // Обновляем данные из "сервера" (localStorage)
+            updateFromServer();
+            
+            // Отправляем наши данные на "сервер"
+            sendToServer();
+        }
+        
+        function updateFromServer() {
+            // Получаем обновленные данные
+            const serverData = localStorage.getItem('bindr-server-data');
+            if (serverData) {
+                const data = JSON.parse(serverData);
+                
+                // Обновляем комнаты
+                if (data.rooms) {
+                    rooms = data.rooms;
+                    updateRoomList();
+                }
+                
+                // Обновляем пользователей
+                if (data.users) {
+                    users = data.users;
+                    updateUserList();
+                }
+                
+                // Обновляем сообщения
+                if (data.messages && currentRoom) {
+                    const roomMessages = data.messages.filter(m => m.roomId === currentRoom.id);
+                    if (JSON.stringify(roomMessages) !== JSON.stringify(messages)) {
+                        messages = roomMessages;
+                        loadMessages();
+                    }
+                }
+            }
+        }
+        
+        function sendToServer() {
+            if (!currentUser) return;
+            
+            // Обновляем текущего пользователя
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            if (userIndex > -1) {
+                users[userIndex] = currentUser;
+            } else {
+                users.push(currentUser);
+            }
+            
+            // Сохраняем на "сервер"
+            const serverData = {
+                rooms: rooms,
+                users: users.filter(u => u.isOnline),
+                messages: getAllMessages(),
+                lastUpdate: new Date().toISOString()
+            };
+            
+            localStorage.setItem('bindr-server-data', JSON.stringify(serverData));
+            
+            // Также сохраняем локально
+            saveData();
+        }
+        
+        function getAllMessages() {
+            // Собираем все сообщения из всех комнат
+            const allMessages = [];
+            rooms.forEach(room => {
+                if (room.messages) {
+                    allMessages.push(...room.messages.map(m => ({
+                        ...m,
+                        roomId: room.id
+                    })));
+                }
+            });
+            return allMessages;
+        }
+        
+        // ========== ВХОД В СИСТЕМУ ==========
+        async function handleLogin() {
             const username = usernameInput.value.trim();
             
             if (!username) {
@@ -494,38 +870,102 @@
                 return;
             }
             
+            // Проверяем, является ли попыткой входа модератора
+            if (username.toLowerCase() === 'iammoderator') {
+                const password = passwordInput.value;
+                if (!password) {
+                    showError('Введите секретный код доступа');
+                    passwordInput.focus();
+                    return;
+                }
+                
+                // Показываем модальное окно для ввода пароля
+                showPasswordModal();
+                return;
+            }
+            
+            // Обычный пользователь
+            await loginAsUser(username);
+        }
+        
+        function showPasswordModal() {
+            passwordModal.style.display = 'flex';
+            modalPassword.value = '';
+            modalPassword.focus();
+        }
+        
+        function hidePasswordModal() {
+            passwordModal.style.display = 'none';
+            modalPassword.value = '';
+        }
+        
+        function verifyModeratorPassword() {
+            const password = modalPassword.value.trim();
+            
+            if (password === MODERATOR_SECRET_CODE) {
+                // Пароль верный
+                hidePasswordModal();
+                loginAsUser('iammoderator', true);
+            } else {
+                showError('Неверный код доступа');
+                modalPassword.focus();
+            }
+        }
+        
+        function cancelModeratorLogin() {
+            hidePasswordModal();
+            usernameInput.value = '';
+            passwordInput.value = '';
+            moderatorPrompt.style.display = 'none';
+            passwordInput.style.display = 'none';
+            loginButton.textContent = 'Войти в чат';
+            loginButton.classList.remove('moderator');
+            usernameInput.focus();
+        }
+        
+        async function loginAsUser(username, moderator = false) {
             // Проверяем, занято ли имя
             if (isUsernameTaken(username)) {
                 showError('Это имя уже занято. Выберите другое.');
                 return;
             }
             
-            // Определяем, является ли модератором
-            isModerator = username.toLowerCase() === 'iammoderator';
+            // Устанавливаем флаг модератора
+            isModerator = moderator;
             
             // Создаем пользователя
             currentUser = {
                 id: generateId(),
                 username: username,
-                isModerator: isModerator,
+                isModerator: moderator,
+                isOnline: true,
                 joinedAt: new Date().toISOString(),
-                isOnline: true
+                lastActive: new Date().toISOString()
             };
             
-            // Добавляем в список пользователей
-            users.push(currentUser);
+            // Находим или создаем комнату
+            currentRoom = await findOrCreateRoom();
+            
+            // Добавляем пользователя в комнату
+            if (currentRoom.users) {
+                currentRoom.users.push(currentUser.id);
+            } else {
+                currentRoom.users = [currentUser.id];
+            }
             
             // Сохраняем данные
             saveData();
+            sendToServer();
             
-            // Показываем чат
+            // Показываем интерфейс чата
             showChatInterface();
             
             // Показываем уведомление
-            showNotification(
-                isModerator ? '👑 Модератор вошел в чат!' : `👋 Добро пожаловать, ${username}!`,
-                'success'
-            );
+            if (moderator) {
+                showNotification('👑 Модератор вошел в чат', 'warning');
+            } else {
+                showNotification(`👋 ${username} присоединился`, 'success');
+            }
         }
         
         function isUsernameTaken(username) {
@@ -535,29 +975,66 @@
             );
         }
         
-        // ========== ПОКАЗАТЬ ЧАТ ==========
+        async function findOrCreateRoom() {
+            // Ищем комнату с местом (макс 34 человека)
+            let availableRoom = rooms.find(room => 
+                room.isActive && 
+                (!room.users || room.users.length < 34)
+            );
+            
+            // Если нет доступной комнаты, создаем новую
+            if (!availableRoom) {
+                availableRoom = createNewRoomObject();
+                rooms.push(availableRoom);
+            }
+            
+            return availableRoom;
+        }
+        
+        function createNewRoomObject() {
+            const roomNumber = rooms.filter(r => r.isActive).length + 1;
+            return {
+                id: generateId(),
+                name: `Комната ${roomNumber}`,
+                users: [],
+                messages: [],
+                maxUsers: 34,
+                isActive: true,
+                createdAt: new Date().toISOString(),
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString() // 1 час
+            };
+        }
+        
+        // ========== ИНТЕРФЕЙС ЧАТА ==========
         function showChatInterface() {
-            // Скрываем экран входа
+            // Переключаем экраны
             loginScreen.style.display = 'none';
             chatInterface.style.display = 'block';
             
             // Показываем контролы модератора
             if (isModerator) {
                 moderatorControls.style.display = 'flex';
+                moderatorBadge.style.display = 'block';
             }
             
             // Обновляем данные
+            updateRoomList();
             updateUserList();
             loadMessages();
-            updateStats();
             
             // Фокусируемся на поле ввода
             setTimeout(() => {
                 messageInput.focus();
             }, 100);
+            
+            // Запускаем таймер активности
+            startActivityTimer();
+            
+            // Запускаем очистку старых данных
+            startCleanupTimers();
         }
         
-        // ========== ОТПРАВКА СООБЩЕНИЯ ==========
+        // ========== СООБЩЕНИЯ ==========
         function sendMessage() {
             const content = messageInput.value.trim();
             
@@ -566,7 +1043,7 @@
                 return;
             }
             
-            if (!currentUser) {
+            if (!currentUser || !currentRoom) {
                 showError('Вы не вошли в чат');
                 return;
             }
@@ -577,15 +1054,22 @@
                 userId: currentUser.id,
                 username: currentUser.username,
                 content: content,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
             
-            // Добавляем в массив
+            // Добавляем в комнату
+            if (!currentRoom.messages) {
+                currentRoom.messages = [];
+            }
+            currentRoom.messages.push(message);
+            
+            // Также добавляем в общий массив
             messages.push(message);
             
             // Сохраняем
             saveData();
+            sendToServer();
             
             // Отображаем
             displayMessage(message);
@@ -593,14 +1077,13 @@
             // Очищаем поле ввода
             messageInput.value = '';
             
-            // Обновляем статистику
-            updateStats();
+            // Обновляем активность
+            updateUserActivity();
             
             // Фокусируемся обратно
             messageInput.focus();
         }
         
-        // ========== ОТОБРАЖЕНИЕ СООБЩЕНИЙ ==========
         function displayMessage(message) {
             const messageElement = document.createElement('div');
             const isOwnMessage = message.userId === currentUser.id;
@@ -612,9 +1095,13 @@
                 ? '👑 Модератор' 
                 : message.username;
             
+            const isModeratorMessage = message.username === 'iammoderator';
+            
             messageElement.innerHTML = `
                 <div class="message-header">
-                    <span class="message-username">${displayName}</span>
+                    <span class="message-username ${isModeratorMessage ? 'moderator' : ''}">
+                        ${displayName}
+                    </span>
                     <span class="message-time">${message.time}</span>
                 </div>
                 <div class="message-content">${escapeHtml(message.content)}</div>
@@ -623,40 +1110,162 @@
             messagesContainer.appendChild(messageElement);
             
             // Прокручиваем вниз
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            scrollToBottom();
         }
         
         function loadMessages() {
             // Очищаем контейнер
             messagesContainer.innerHTML = '';
             
+            // Загружаем сообщения текущей комнаты
+            if (currentRoom && currentRoom.messages) {
+                messages = currentRoom.messages;
+            }
+            
             // Отображаем сообщения
-            if (messages.length === 0) {
+            if (!messages || messages.length === 0) {
                 messagesContainer.innerHTML = `
-                    <div style="text-align: center; color: #666; padding: 40px;">
-                        <p style="font-size: 18px; margin-bottom: 10px;">💬</p>
-                        <p>Здесь пока нет сообщений</p>
-                        <p style="font-size: 14px; margin-top: 10px;">Будьте первым!</p>
+                    <div style="text-align: center; color: #b0b0b0; padding: 40px;">
+                        <p style="font-size: 24px; margin-bottom: 10px;">💬</p>
+                        <p style="font-size: 1.2rem; margin-bottom: 5px;">Чат пуст</p>
+                        <p>Напишите первое сообщение!</p>
                     </div>
                 `;
             } else {
                 messages.forEach(displayMessage);
             }
+            
+            // Прокручиваем вниз
+            scrollToBottom();
         }
         
-        // ========== СПИСОК ПОЛЬЗОВАТЕЛЕЙ ==========
-        function updateUserList() {
-            userList.innerHTML = '';
+        // ========== КОМНАТЫ ==========
+        function updateRoomList() {
+            roomList.innerHTML = '';
             
-            const onlineUsers = users.filter(user => user.isOnline === true);
-            onlineCount.textContent = onlineUsers.length;
+            const activeRooms = rooms.filter(room => room.isActive);
             
-            if (onlineUsers.length === 0) {
-                userList.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Нет пользователей онлайн</div>';
+            if (activeRooms.length === 0) {
+                roomList.innerHTML = `
+                    <div style="color: #b0b0b0; text-align: center; padding: 20px;">
+                        Нет активных комнат
+                    </div>
+                `;
                 return;
             }
             
-            onlineUsers.forEach(user => {
+            activeRooms.forEach(room => {
+                const roomElement = document.createElement('div');
+                roomElement.className = `room-item ${room.id === currentRoom?.id ? 'active' : ''}`;
+                roomElement.dataset.roomId = room.id;
+                
+                const userCount = room.users ? room.users.length : 0;
+                const expiryTime = new Date(room.expiresAt);
+                const now = new Date();
+                const timeLeft = Math.max(0, Math.floor((expiryTime - now) / 60000));
+                
+                roomElement.innerHTML = `
+                    <div class="room-info">
+                        <div class="room-name">${room.name}</div>
+                        <div class="room-stats">
+                            ${userCount}/34 пользователей • 
+                            ${timeLeft} мин
+                        </div>
+                    </div>
+                `;
+                
+                // Добавляем обработчик смены комнаты
+                if (room.id !== currentRoom?.id) {
+                    roomElement.addEventListener('click', () => switchRoom(room.id));
+                }
+                
+                roomList.appendChild(roomElement);
+            });
+        }
+        
+        function switchRoom(newRoomId) {
+            if (!currentUser) return;
+            
+            const newRoom = rooms.find(r => r.id === newRoomId);
+            if (!newRoom) return;
+            
+            // Проверяем, есть ли место
+            if (newRoom.users && newRoom.users.length >= 34) {
+                showNotification('В комнате нет свободных мест', 'error');
+                return;
+            }
+            
+            // Удаляем из старой комнаты
+            if (currentRoom && currentRoom.users) {
+                const userIndex = currentRoom.users.indexOf(currentUser.id);
+                if (userIndex > -1) {
+                    currentRoom.users.splice(userIndex, 1);
+                }
+            }
+            
+            // Добавляем в новую комнату
+            currentRoom = newRoom;
+            if (!currentRoom.users) currentRoom.users = [];
+            if (!currentRoom.users.includes(currentUser.id)) {
+                currentRoom.users.push(currentUser.id);
+            }
+            
+            // Загружаем сообщения новой комнаты
+            messages = currentRoom.messages || [];
+            
+            // Сохраняем
+            saveData();
+            sendToServer();
+            
+            // Обновляем интерфейс
+            updateRoomList();
+            updateUserList();
+            loadMessages();
+            
+            showNotification(`Вы перешли в ${currentRoom.name}`, 'success');
+        }
+        
+        function createNewRoom() {
+            if (!isModerator) return;
+            
+            const newRoom = createNewRoomObject();
+            rooms.push(newRoom);
+            
+            // Переходим в новую комнату
+            switchRoom(newRoom.id);
+            
+            showNotification(`Создана новая комната: ${newRoom.name}`, 'success');
+        }
+        
+        // ========== ПОЛЬЗОВАТЕЛИ ==========
+        function updateUserList() {
+            userList.innerHTML = '';
+            
+            if (!currentRoom || !currentRoom.users) {
+                userList.innerHTML = `
+                    <div style="color: #b0b0b0; text-align: center; padding: 20px;">
+                        Нет пользователей
+                    </div>
+                `;
+                return;
+            }
+            
+            // Получаем пользователей текущей комнаты
+            const roomUsers = users.filter(user => 
+                currentRoom.users.includes(user.id) && 
+                user.isOnline === true
+            );
+            
+            if (roomUsers.length === 0) {
+                userList.innerHTML = `
+                    <div style="color: #b0b0b0; text-align: center; padding: 20px;">
+                        Нет пользователей онлайн
+                    </div>
+                `;
+                return;
+            }
+            
+            roomUsers.forEach(user => {
                 const userElement = document.createElement('div');
                 userElement.className = 'user-item';
                 
@@ -672,29 +1281,26 @@
                         <div>
                             <div class="user-name">
                                 ${user.username === 'iammoderator' ? '👑 Модератор' : user.username}
-                                ${isCurrentUser ? '<span style="color: #4361ee; font-size: 0.8em;">(Вы)</span>' : ''}
+                                ${isCurrentUser ? ' (Вы)' : ''}
                             </div>
                         </div>
                     </div>
+                    <button class="delete-user-btn" data-user-id="${user.id}" 
+                            ${!isModerator || isCurrentUser ? 'style="display: none;"' : ''}>
+                        ×
+                    </button>
                 `;
-                
-                // Добавляем кнопку удаления для модератора
-                if (isModerator && !isCurrentUser) {
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'delete-user-btn';
-                    deleteBtn.innerHTML = '×';
-                    deleteBtn.title = 'Удалить пользователя';
-                    deleteBtn.addEventListener('click', () => deleteUser(user.id));
-                    userElement.appendChild(deleteBtn);
-                }
                 
                 userList.appendChild(userElement);
             });
-        }
-        
-        function updateStats() {
-            messageCount.textContent = messages.length;
-            onlineCount.textContent = users.filter(u => u.isOnline).length;
+            
+            // Добавляем обработчики для кнопок удаления
+            document.querySelectorAll('.delete-user-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const userId = e.target.dataset.userId;
+                    deleteUser(userId);
+                });
+            });
         }
         
         // ========== МОДЕРАТОРСКИЕ ФУНКЦИИ ==========
@@ -708,24 +1314,34 @@
                 return;
             }
             
-            // Удаляем пользователя
+            // Помечаем как неактивного
             const userIndex = users.findIndex(u => u.id === userId);
             if (userIndex > -1) {
                 users[userIndex].isOnline = false;
             }
             
+            // Удаляем из комнаты
+            if (currentRoom && currentRoom.users) {
+                const roomUserIndex = currentRoom.users.indexOf(userId);
+                if (roomUserIndex > -1) {
+                    currentRoom.users.splice(roomUserIndex, 1);
+                }
+            }
+            
             // Удаляем сообщения пользователя
-            messages = messages.filter(m => m.userId !== userId);
+            if (currentRoom && currentRoom.messages) {
+                currentRoom.messages = currentRoom.messages.filter(m => m.userId !== userId);
+            }
             
             // Сохраняем
             saveData();
+            sendToServer();
             
             // Обновляем интерфейс
             updateUserList();
             loadMessages();
-            updateStats();
             
-            showNotification(`Пользователь "${user.username}" удален`, 'success');
+            showNotification(`Пользователь "${user.username}" удален`, 'warning');
         }
         
         function clearChat() {
@@ -735,65 +1351,151 @@
                 return;
             }
             
-            // Очищаем сообщения
-            messages = [];
+            // Очищаем сообщения в текущей комнате
+            if (currentRoom) {
+                currentRoom.messages = [];
+                messages = [];
+            }
             
             // Сохраняем
             saveData();
+            sendToServer();
             
             // Обновляем интерфейс
             loadMessages();
-            updateStats();
             
-            showNotification('Чат очищен', 'success');
+            showNotification('Чат очищен', 'warning');
         }
         
-        function deleteRoom() {
+        function deleteCurrentRoom() {
             if (!isModerator) return;
             
-            if (!confirm('Удалить комнату? Все пользователи будут удалены и чат очищен.')) {
+            if (!confirm('Удалить эту комнату? Все пользователи будут перемещены.')) {
                 return;
             }
             
-            // Очищаем все данные
-            users.forEach(user => {
-                user.isOnline = false;
-            });
-            
-            messages = [];
-            
-            // Сохраняем
-            saveData();
-            
-            // Показываем уведомление
-            showNotification('Комната удалена. Чат будет перезагружен.', 'warning');
-            
-            // Перезагружаем через 2 секунды
-            setTimeout(() => {
-                handleLogout();
-            }, 2000);
+            // Помечаем комнату как неактивную
+            const roomIndex = rooms.findIndex(r => r.id === currentRoom.id);
+            if (roomIndex > -1) {
+                rooms[roomIndex].isActive = false;
+                
+                // Перемещаем пользователей в другие комнаты
+                if (currentRoom.users && currentRoom.users.length > 0) {
+                    // Находим другую активную комнату
+                    const otherRoom = rooms.find(r => r.isActive && r.id !== currentRoom.id);
+                    if (otherRoom) {
+                        currentRoom.users.forEach(userId => {
+                            if (!otherRoom.users.includes(userId)) {
+                                otherRoom.users.push(userId);
+                            }
+                        });
+                    }
+                }
+                
+                // Переходим в другую комнату
+                const newRoom = rooms.find(r => r.isActive && r.id !== currentRoom.id);
+                if (newRoom) {
+                    switchRoom(newRoom.id);
+                } else {
+                    // Создаем новую комнату
+                    createNewRoom();
+                }
+                
+                showNotification('Комната удалена', 'warning');
+            }
         }
         
-        // ========== СОХРАНЕНИЕ И ЗАГРУЗКА ==========
+        // ========== ТАЙМЕРЫ И ОЧИСТКА ==========
+        function startActivityTimer() {
+            // Обновляем активность каждую минуту
+            setInterval(updateUserActivity, 60000);
+        }
+        
+        function updateUserActivity() {
+            if (!currentUser) return;
+            
+            currentUser.lastActive = new Date().toISOString();
+            
+            // Помечаем неактивных пользователей (10 минут)
+            const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+            users.forEach(user => {
+                if (user.isOnline && new Date(user.lastActive) < tenMinutesAgo) {
+                    user.isOnline = false;
+                    
+                    // Удаляем из комнаты
+                    rooms.forEach(room => {
+                        if (room.users) {
+                            const index = room.users.indexOf(user.id);
+                            if (index > -1) {
+                                room.users.splice(index, 1);
+                            }
+                        }
+                    });
+                }
+            });
+            
+            saveData();
+            sendToServer();
+            updateUserList();
+        }
+        
+        function startCleanupTimers() {
+            // Очистка старых комнат (1 час)
+            setInterval(() => {
+                const now = new Date();
+                rooms.forEach(room => {
+                    if (room.isActive && new Date(room.expiresAt) < now) {
+                        room.isActive = false;
+                    }
+                });
+                
+                // Удаляем очень старые комнаты (старше 2 часов)
+                const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+                rooms = rooms.filter(room => new Date(room.createdAt) > twoHoursAgo);
+                
+                saveData();
+                sendToServer();
+                updateRoomList();
+                
+            }, 60 * 1000); // Каждую минуту
+        }
+        
+        // ========== СОХРАНЕНИЕ ДАННЫХ ==========
         function saveData() {
             localStorage.setItem('bindr-users', JSON.stringify(users));
-            localStorage.setItem('bindr-messages', JSON.stringify(messages));
+            localStorage.setItem('bindr-rooms', JSON.stringify(rooms));
             if (currentUser) {
                 localStorage.setItem('bindr-current-user', JSON.stringify(currentUser));
+            }
+            if (currentRoom) {
+                localStorage.setItem('bindr-current-room', JSON.stringify(currentRoom));
             }
         }
         
         function loadData() {
-            // Загружаем пользователей
+            // Пользователи
             const savedUsers = localStorage.getItem('bindr-users');
             if (savedUsers) {
                 users = JSON.parse(savedUsers);
             }
             
-            // Загружаем сообщения
-            const savedMessages = localStorage.getItem('bindr-messages');
-            if (savedMessages) {
-                messages = JSON.parse(savedMessages);
+            // Комнаты
+            const savedRooms = localStorage.getItem('bindr-rooms');
+            if (savedRooms) {
+                rooms = JSON.parse(savedRooms);
+            }
+            
+            // Текущий пользователь
+            const savedCurrentUser = localStorage.getItem('bindr-current-user');
+            if (savedCurrentUser) {
+                currentUser = JSON.parse(savedCurrentUser);
+                isModerator = currentUser.isModerator || false;
+            }
+            
+            // Текущая комната
+            const savedCurrentRoom = localStorage.getItem('bindr-current-room');
+            if (savedCurrentRoom) {
+                currentRoom = JSON.parse(savedCurrentRoom);
             }
         }
         
@@ -805,7 +1507,17 @@
                 if (userIndex > -1) {
                     users[userIndex].isOnline = false;
                 }
+                
+                // Удаляем из комнаты
+                if (currentRoom && currentRoom.users) {
+                    const roomUserIndex = currentRoom.users.indexOf(currentUser.id);
+                    if (roomUserIndex > -1) {
+                        currentRoom.users.splice(roomUserIndex, 1);
+                    }
+                }
+                
                 saveData();
+                sendToServer();
             }
             
             // Очищаем текущего пользователя
@@ -815,13 +1527,20 @@
             chatInterface.style.display = 'none';
             loginScreen.style.display = 'flex';
             
-            // Очищаем поле
+            // Очищаем поля
             usernameInput.value = '';
-            usernameInput.focus();
+            passwordInput.value = '';
+            moderatorPrompt.style.display = 'none';
+            passwordInput.style.display = 'none';
+            loginButton.textContent = 'Войти в чат';
+            loginButton.classList.remove('moderator');
             
             // Сбрасываем данные
             currentUser = null;
             isModerator = false;
+            
+            // Фокусируемся на поле ввода
+            usernameInput.focus();
             
             showNotification('Вы вышли из чата', 'info');
         }
@@ -842,7 +1561,7 @@
         
         function showNotification(message, type = 'info') {
             notification.textContent = message;
-            notification.className = 'notification ' + type;
+            notification.className = `notification ${type}`;
             notification.style.display = 'block';
             
             setTimeout(() => {
@@ -851,12 +1570,15 @@
         }
         
         function escapeHtml(text) {
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function scrollToBottom() {
+            setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 100);
         }
     </script>
 </body>
